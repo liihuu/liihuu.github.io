@@ -25,12 +25,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-arrow:before {
-  content: "\e905";
-}
-.icon-draw:before {
-  content: "\e904";
-}
 .icon-github:before {
   content: "\e900";
 }
