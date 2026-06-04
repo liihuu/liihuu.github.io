@@ -1,225 +1,109 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import {
-  Activity,
-  ArrowUpRight,
-  BarChart3,
-  Code2,
-  Cpu,
-  GitBranch,
-  Mail,
-  MessageCircle,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp
-} from 'lucide-react'
 
-import avatar from './assets/avatar.jpeg'
 import qrcode from './assets/qrcode.png'
 import './styles.css'
 
 const profile = {
   name: 'liihuu',
-  role: '金融前端工程师',
+  role: '前端工程师',
   email: 'hu_li888@foxmail.com',
   github: 'https://github.com/liihuu',
   klineChart: 'https://github.com/klinecharts/KLineChart'
 }
 
-const signals = [
-  { value: '金融前端', label: '长期服务行情、交易、运营与数据密集型产品' },
-  { value: '图表工程', label: '关注高频数据渲染、交互反馈和指标表达' },
-  { value: '开源作者', label: '持续维护 KLineChart，打磨开发者使用体验' }
-]
-
-const capabilities = [
-  {
-    title: '复杂数据界面',
-    text: '把行情、指标、订单和状态信息组织成可扫描、可判断、可操作的界面。',
-    icon: BarChart3
-  },
-  {
-    title: '高性能可视化',
-    text: '围绕 Canvas、SVG 与前端渲染链路，优化大数据量下的稳定体验。',
-    icon: Activity
-  },
-  {
-    title: '工程化交付',
-    text: '用清晰的组件边界、类型约束和构建流程支撑长期迭代。',
-    icon: Code2
-  },
-  {
-    title: '可靠产品体验',
-    text: '在高信息密度场景里保持响应速度、异常兜底和交互一致性。',
-    icon: ShieldCheck
-  }
-]
-
-const projects = [
-  {
-    name: 'KLineChart',
-    description:
-      '面向金融场景的专业 K 线图表库，覆盖指标、绘图、交互、主题和高度定制能力。',
-    href: profile.klineChart,
-    tag: '开源图表库',
-    icon: TrendingUp
-  },
-  {
-    name: '金融前端实践',
-    description:
-      '沉淀行情终端、交易链路、风控后台和运营系统中的前端架构经验。',
-    href: `mailto:${profile.email}`,
-    tag: '产品工程',
-    icon: Cpu
-  }
-]
+const particles = Array.from({ length: 18 }, (_, i) => i)
 
 function App () {
   return (
-    <main className="site-shell">
-      <section className="hero" aria-labelledby="hero-title">
-        <nav className="top-nav" aria-label="站内导航">
-          <a href="#work">能力</a>
-          <a href="#projects">项目</a>
-          <a href="#contact">联系</a>
+    <div className="page">
+      <div className="bg" aria-hidden="true">
+        <div className="bg__beam" />
+        <div className="bg__grid" />
+        <div className="bg__glow bg__glow--a" />
+        <div className="bg__glow bg__glow--b" />
+        <div className="bg__particles">
+          {particles.map((i) => (
+            <span key={i} className="bg__dot" />
+          ))}
+        </div>
+        <div className="bg__flux">
+          {Array.from({ length: 12 }, (_, i) => (
+            <span key={i} />
+          ))}
+        </div>
+        <div className="bg__rings">
+          <span className="bg__ring" />
+          <span className="bg__ring" />
+          <span className="bg__ring" />
+        </div>
+        <div className="bg__shapes">
+          <span className="bg__shape bg__shape--1" />
+          <span className="bg__shape bg__shape--2" />
+          <span className="bg__shape bg__shape--3" />
+          <span className="bg__shape bg__shape--4" />
+        </div>
+        <div className="bg__corners">
+          <span className="bg__corner bg__corner--tl" />
+          <span className="bg__corner bg__corner--tr" />
+          <span className="bg__corner bg__corner--bl" />
+          <span className="bg__corner bg__corner--br" />
+        </div>
+        <div className="ambient">
+          <div className="orb">
+            <div className="orb__shell" />
+            <div className="orb__shell orb__shell--b" />
+            <div className="orb__core" />
+          </div>
+        </div>
+      </div>
+
+      <main className="shell">
+        <section className="profile">
+          <img className="avatar" src="/avatar.jpg" alt="" width={128} height={128} />
+          <h1>{profile.name}</h1>
+          <p className="role">{profile.role}</p>
+          <div className="bio">
+            <p>多年金融行业经验，擅长行情交易类产品开发。</p>
+            <p>
+              开源项目{' '}
+              <a href={profile.klineChart} target="_blank" rel="noreferrer">
+                KLineChart
+              </a>{' '}
+              的作者。
+            </p>
+          </div>
+        </section>
+
+        <nav className="contact" aria-label="联系方式">
+          <a href={`mailto:${profile.email}`} title={profile.email}>
+            <svg viewBox="0 0 1024 1024">
+              <path fill="currentColor" d="M789.333333 128a170.666667 170.666667 0 0 1 170.666667 170.666667v426.666666a170.666667 170.666667 0 0 1-170.666667 170.666667H234.666667a170.666667 170.666667 0 0 1-170.666667-170.666667V298.666667a170.666667 170.666667 0 0 1 170.666667-170.666667h554.666666z m106.666667 243.797333l-310.613333 147.925334a170.666667 170.666667 0 0 1-146.773334 0L128 371.797333V725.333333a106.666667 106.666667 0 0 0 102.037333 106.56L234.666667 832h554.666666a106.666667 106.666667 0 0 0 106.56-102.037333L896 725.333333V371.797333zM789.333333 192H234.666667a106.666667 106.666667 0 0 0-106.56 102.037333L128 300.928l338.133333 161.024a106.666667 106.666667 0 0 0 86.549334 2.282667l5.184-2.282667L896 300.906667V298.666667a106.666667 106.666667 0 0 0-102.037333-106.56L789.333333 192z" />
+            </svg>
+            邮箱
+          </a>
+          <a href={profile.github} target="_blank" rel="noreferrer">
+            <svg viewBox="0 0 1024 1024">
+              <path fill="currentColor" d="M511.6 76.3C264.3 76.2 64 276.4 64 523.5 64 718.9 189.3 885 363.8 946c23.5 5.9 19.9-10.8 19.9-22.2v-77.5c-135.7 15.9-141.2-73.9-150.3-88.9C215 726 171.5 718 184.5 703c30.9-15.9 62.4 4 98.9 57.9 26.4 39.1 77.9 32.5 104 26 5.7-23.5 17.9-44.5 34.7-60.8-140.6-25.2-199.2-111-199.2-213 0-49.5 16.3-95 48.3-131.7-20.4-60.5 1.9-112.3 4.9-120 58.1-5.2 118.5 41.6 123.2 45.3 33-8.9 70.7-13.6 112.9-13.6 42.4 0 80.2 4.9 113.5 13.9 11.3-8.6 67.3-48.8 121.3-43.9 2.9 7.7 24.7 58.3 5.5 118 32.4 36.8 48.9 82.7 48.9 132.3 0 102.2-59 188.1-200 212.9 23.5 23.2 38.1 55.4 38.1 91v112.5c0.8 9 0 17.9 15 17.9 177.1-59.7 304.6-227 304.6-424.1 0-247.2-200.4-447.3-447.5-447.3z" />
+            </svg>
+            GitHub
+          </a>
+          <div className="wechat">
+            <button type="button">
+              <svg viewBox="0 0 1024 1024">
+                <path fill="currentColor" d="M384 102.4C172.8 102.4 0 240 0 409.6c0 96 54.4 182.4 140.8 240L102.4 768l128-76.8c44.8 16 96 25.6 150.4 25.6-12.8-32-22.4-67.2-22.4-102.4 0-169.6 160-307.2 358.4-307.2h28.8C694.4 188.8 550.4 102.4 384 102.4m-153.6 128c28.8 0 51.2 22.4 51.2 51.2s-22.4 51.2-51.2 51.2-51.2-22.4-51.2-51.2c0-28.8 22.4-51.2 51.2-51.2m256 0c28.8 0 51.2 22.4 51.2 51.2s-22.4 51.2-51.2 51.2-51.2-22.4-51.2-51.2c0-28.8 22.4-51.2 51.2-51.2m230.4 128c-169.6 0-307.2 115.2-307.2 256s137.6 256 307.2 256c35.2 0 67.2-3.2 99.2-12.8l105.6 64-32-96c80-48 134.4-124.8 134.4-211.2 0-140.8-137.6-256-307.2-256m-102.4 128c28.8 0 51.2 22.4 51.2 51.2 0 28.8-22.4 51.2-51.2 51.2-28.8 0-51.2-22.4-51.2-51.2 0-28.8 22.4-51.2 51.2-51.2m204.8 0c28.8 0 51.2 22.4 51.2 51.2 0 28.8-22.4 51.2-51.2 51.2-28.8 0-51.2-22.4-51.2-51.2 0-28.8 22.4-51.2 51.2-51.2z" />
+              </svg>
+              微信
+            </button>
+            <div className="wechat__qr">
+              <img src={qrcode} alt="微信二维码" width={128} height={128} />
+            </div>
+          </div>
         </nav>
 
-        <div className="hero-grid">
-          <div className="hero-copy">
-            <p className="eyebrow">
-              <Sparkles size={16} strokeWidth={1.8} />
-              {profile.role}
-            </p>
-            <h1 id="hero-title">
-              <span>构建清晰、稳定、</span>
-              <span>可扩展的</span>
-              <span>金融前端体验。</span>
-            </h1>
-            <p className="hero-lede">
-              我是 {profile.name}，专注金融前端工程与数据可视化。长期处理行情、交易和高密度信息界面，也在持续维护开源项目 KLineChart。
-            </p>
-            <div className="hero-actions" aria-label="主要链接">
-              <a className="button primary" href={profile.klineChart} target="_blank" rel="noreferrer">
-                查看 KLineChart
-                <ArrowUpRight size={18} aria-hidden="true" />
-              </a>
-              <a className="button secondary" href={profile.github} target="_blank" rel="noreferrer">
-                <GitBranch size={18} aria-hidden="true" />
-                访问代码主页
-              </a>
-            </div>
-          </div>
-
-          <aside className="terminal-panel" aria-label="个人概览">
-            <div className="panel-header">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className="avatar-row">
-              <img src={avatar} alt="liihuu 头像" />
-              <div>
-                <strong>{profile.name}</strong>
-                <p>{profile.role}</p>
-              </div>
-            </div>
-            <dl className="profile-stack">
-              <div>
-                <dt>方向</dt>
-                <dd>金融终端、交易系统、图表库</dd>
-              </div>
-              <div>
-                <dt>关注</dt>
-                <dd>性能、稳定性、开发者体验</dd>
-              </div>
-              <div>
-                <dt>状态</dt>
-                <dd>持续构建中</dd>
-              </div>
-            </dl>
-          </aside>
-        </div>
-      </section>
-
-      <section className="signal-band" aria-label="专业标签">
-        {signals.map((item) => (
-          <article className="signal-card" key={item.value}>
-            <strong>{item.value}</strong>
-            <p>{item.label}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="content-section" id="work">
-        <div className="section-heading">
-          <p className="section-kicker">能力版图</p>
-          <h2>从数据渲染到产品交付，处理金融场景里的复杂度。</h2>
-        </div>
-        <div className="capability-grid">
-          {capabilities.map((item) => {
-            const Icon = item.icon
-            return (
-              <article className="capability-card" key={item.title}>
-                <span className="card-icon">
-                  <Icon size={22} aria-hidden="true" />
-                </span>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-              </article>
-            )
-          })}
-        </div>
-      </section>
-
-      <section className="content-section projects" id="projects">
-        <div className="section-heading">
-          <p className="section-kicker">代表工作</p>
-          <h2>把工程判断落到可复用的项目和稳定的业务体验里。</h2>
-        </div>
-        <div className="project-list">
-          {projects.map((project) => {
-            const Icon = project.icon
-            return (
-              <a className="project-card" href={project.href} target="_blank" rel="noreferrer" key={project.name}>
-                <span className="project-tag">{project.tag}</span>
-                <span className="project-icon">
-                  <Icon size={24} aria-hidden="true" />
-                </span>
-                <strong>{project.name}</strong>
-                <p>{project.description}</p>
-                <span className="project-link">
-                  继续查看
-                  <ArrowUpRight size={17} aria-hidden="true" />
-                </span>
-              </a>
-            )
-          })}
-        </div>
-      </section>
-
-      <section className="contact-band" id="contact">
-        <div>
-          <p className="section-kicker">联系我</p>
-          <h2>欢迎交流金融前端、图表工程、开源协作与产品实现。</h2>
-        </div>
-        <div className="contact-actions">
-          <a className="icon-link" href={`mailto:${profile.email}`} aria-label="发送邮件">
-            <Mail size={21} aria-hidden="true" />
-          </a>
-          <a className="icon-link" href={profile.github} target="_blank" rel="noreferrer" aria-label="访问代码主页">
-            <GitBranch size={21} aria-hidden="true" />
-          </a>
-          <div className="wechat" aria-label="微信二维码">
-            <button className="icon-link" type="button" aria-label="显示微信二维码">
-              <MessageCircle size={21} aria-hidden="true" />
-            </button>
-            <div className="qr-panel">
-              <img src={qrcode} alt="liihuu 微信二维码" />
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+        <footer className="footer">© {new Date().getFullYear()} {profile.name}</footer>
+      </main>
+    </div>
   )
 }
 

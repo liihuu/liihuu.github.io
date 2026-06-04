@@ -3,9 +3,10 @@
   "name": "liihuu - 金融前端工程师与 KLineChart 作者",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/avatar.jpg",
+      "sizes": "360x360",
+      "type": "image/jpeg",
+      "purpose": "any"
     }
   ],
   "start_url": "/",
