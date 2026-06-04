@@ -1,6 +1,6 @@
 {
   "short_name": "liihuu",
-  "name": "liihuu",
+  "name": "liihuu - Frontend Engineer & KLineChart Author",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,8 +8,8 @@
       "type": "image/x-icon"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#14201c",
+  "background_color": "#f5f2eb"
 }
