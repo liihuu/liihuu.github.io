@@ -1,11 +1,15 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import {
+  Activity,
   ArrowUpRight,
   BarChart3,
-  Github,
+  Code2,
+  Cpu,
+  GitBranch,
   Mail,
   MessageCircle,
+  ShieldCheck,
   Sparkles,
   TrendingUp
 } from 'lucide-react'
@@ -16,51 +20,57 @@ import './styles.css'
 
 const profile = {
   name: 'liihuu',
-  title: 'Frontend Engineer / Open Source Author',
+  role: '金融前端工程师',
   email: 'hu_li888@foxmail.com',
   github: 'https://github.com/liihuu',
-  weibo: 'https://weibo.com/u/2378413570',
   klineChart: 'https://github.com/klinecharts/KLineChart'
 }
 
-const highlights = [
-  {
-    value: 'FinTech',
-    label: '多年金融前端工程实践，关注行情、交易、数据密度与性能体验。'
-  },
-  {
-    value: 'KLineChart',
-    label: '开源图表项目作者，持续打磨金融 K 线图的可用性与工程化。'
-  },
-  {
-    value: 'Frontend',
-    label: '偏爱清晰的架构、稳定的交互和能够长期维护的产品代码。'
-  }
+const signals = [
+  { value: '金融前端', label: '长期服务行情、交易、运营与数据密集型产品' },
+  { value: '图表工程', label: '关注高频数据渲染、交互反馈和指标表达' },
+  { value: '开源作者', label: '持续维护 KLineChart，打磨开发者使用体验' }
 ]
 
-const focusAreas = [
-  '金融行情与交易终端',
-  '高性能 Canvas / SVG 数据可视化',
-  'React 工程架构与组件系统',
-  '开源项目维护与开发者体验'
+const capabilities = [
+  {
+    title: '复杂数据界面',
+    text: '把行情、指标、订单和状态信息组织成可扫描、可判断、可操作的界面。',
+    icon: BarChart3
+  },
+  {
+    title: '高性能可视化',
+    text: '围绕 Canvas、SVG 与前端渲染链路，优化大数据量下的稳定体验。',
+    icon: Activity
+  },
+  {
+    title: '工程化交付',
+    text: '用清晰的组件边界、类型约束和构建流程支撑长期迭代。',
+    icon: Code2
+  },
+  {
+    title: '可靠产品体验',
+    text: '在高信息密度场景里保持响应速度、异常兜底和交互一致性。',
+    icon: ShieldCheck
+  }
 ]
 
 const projects = [
   {
     name: 'KLineChart',
     description:
-      '面向金融场景的专业 K 线图表库，覆盖指标、绘图、交互和高度可定制的图表体验。',
+      '面向金融场景的专业 K 线图表库，覆盖指标、绘图、交互、主题和高度定制能力。',
     href: profile.klineChart,
-    meta: 'Open Source / Financial Charting',
+    tag: '开源图表库',
     icon: TrendingUp
   },
   {
-    name: 'Financial Frontend',
+    name: '金融前端实践',
     description:
-      '围绕行情、交易、风控与运营后台沉淀前端工程能力，在复杂信息密度下保持产品可用。',
+      '沉淀行情终端、交易链路、风控后台和运营系统中的前端架构经验。',
     href: `mailto:${profile.email}`,
-    meta: 'Work / Product Engineering',
-    icon: BarChart3
+    tag: '产品工程',
+    icon: Cpu
   }
 ]
 
@@ -68,80 +78,117 @@ function App () {
   return (
     <main className="site-shell">
       <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-media" aria-hidden="true" />
-        <div className="hero-overlay" />
-        <nav className="top-nav" aria-label="Primary navigation">
-          <a href="#work">Work</a>
-          <a href="#open-source">Open Source</a>
-          <a href="#contact">Contact</a>
+        <nav className="top-nav" aria-label="站内导航">
+          <a href="#work">能力</a>
+          <a href="#projects">项目</a>
+          <a href="#contact">联系</a>
         </nav>
 
-        <div className="hero-content">
-          <div className="avatar-wrap">
-            <img src={avatar} alt="liihuu portrait" />
+        <div className="hero-grid">
+          <div className="hero-copy">
+            <p className="eyebrow">
+              <Sparkles size={16} strokeWidth={1.8} />
+              {profile.role}
+            </p>
+            <h1 id="hero-title">
+              <span>构建清晰、稳定、</span>
+              <span>可扩展的</span>
+              <span>金融前端体验。</span>
+            </h1>
+            <p className="hero-lede">
+              我是 {profile.name}，专注金融前端工程与数据可视化。长期处理行情、交易和高密度信息界面，也在持续维护开源项目 KLineChart。
+            </p>
+            <div className="hero-actions" aria-label="主要链接">
+              <a className="button primary" href={profile.klineChart} target="_blank" rel="noreferrer">
+                查看 KLineChart
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </a>
+              <a className="button secondary" href={profile.github} target="_blank" rel="noreferrer">
+                <GitBranch size={18} aria-hidden="true" />
+                访问代码主页
+              </a>
+            </div>
           </div>
-          <p className="eyebrow">
-            <Sparkles size={16} strokeWidth={1.8} />
-            Frontend Engineer in FinTech
-          </p>
-          <h1 id="hero-title">liihuu</h1>
-          <p className="hero-copy">
-            我是一名前端工程师，长期从事金融前端开发，也是开源项目
-            <a href={profile.klineChart} target="_blank" rel="noreferrer"> KLineChart </a>
-            的作者。关注复杂数据场景里的性能、可读性和稳定体验。
-          </p>
-          <div className="hero-actions" aria-label="Primary links">
-            <a className="button primary" href={profile.klineChart} target="_blank" rel="noreferrer">
-              KLineChart
-              <ArrowUpRight size={18} aria-hidden="true" />
-            </a>
-            <a className="button secondary" href={profile.github} target="_blank" rel="noreferrer">
-              <Github size={18} aria-hidden="true" />
-              GitHub
-            </a>
-          </div>
+
+          <aside className="terminal-panel" aria-label="个人概览">
+            <div className="panel-header">
+              <span />
+              <span />
+              <span />
+            </div>
+            <div className="avatar-row">
+              <img src={avatar} alt="liihuu 头像" />
+              <div>
+                <strong>{profile.name}</strong>
+                <p>{profile.role}</p>
+              </div>
+            </div>
+            <dl className="profile-stack">
+              <div>
+                <dt>方向</dt>
+                <dd>金融终端、交易系统、图表库</dd>
+              </div>
+              <div>
+                <dt>关注</dt>
+                <dd>性能、稳定性、开发者体验</dd>
+              </div>
+              <div>
+                <dt>状态</dt>
+                <dd>持续构建中</dd>
+              </div>
+            </dl>
+          </aside>
         </div>
       </section>
 
-      <section className="summary-band" aria-label="Profile highlights">
-        {highlights.map((item) => (
-          <article className="metric" key={item.value}>
+      <section className="signal-band" aria-label="专业标签">
+        {signals.map((item) => (
+          <article className="signal-card" key={item.value}>
             <strong>{item.value}</strong>
             <p>{item.label}</p>
           </article>
         ))}
       </section>
 
-      <section className="section-grid" id="work">
+      <section className="content-section" id="work">
         <div className="section-heading">
-          <p className="section-kicker">What I Work On</p>
-          <h2>把复杂金融数据做成稳定、清晰、可信赖的前端体验。</h2>
+          <p className="section-kicker">能力版图</p>
+          <h2>从数据渲染到产品交付，处理金融场景里的复杂度。</h2>
         </div>
-        <div className="focus-list">
-          {focusAreas.map((item) => (
-            <span key={item}>{item}</span>
-          ))}
+        <div className="capability-grid">
+          {capabilities.map((item) => {
+            const Icon = item.icon
+            return (
+              <article className="capability-card" key={item.title}>
+                <span className="card-icon">
+                  <Icon size={22} aria-hidden="true" />
+                </span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            )
+          })}
         </div>
       </section>
 
-      <section className="project-section" id="open-source">
+      <section className="content-section projects" id="projects">
         <div className="section-heading">
-          <p className="section-kicker">Selected Work</p>
-          <h2>开源与金融前端实践。</h2>
+          <p className="section-kicker">代表工作</p>
+          <h2>把工程判断落到可复用的项目和稳定的业务体验里。</h2>
         </div>
         <div className="project-list">
           {projects.map((project) => {
             const Icon = project.icon
             return (
               <a className="project-card" href={project.href} target="_blank" rel="noreferrer" key={project.name}>
+                <span className="project-tag">{project.tag}</span>
                 <span className="project-icon">
-                  <Icon size={22} aria-hidden="true" />
+                  <Icon size={24} aria-hidden="true" />
                 </span>
-                <span className="project-meta">{project.meta}</span>
                 <strong>{project.name}</strong>
                 <p>{project.description}</p>
                 <span className="project-link">
-                  Visit
+                  继续查看
                   <ArrowUpRight size={17} aria-hidden="true" />
                 </span>
               </a>
@@ -152,22 +199,22 @@ function App () {
 
       <section className="contact-band" id="contact">
         <div>
-          <p className="section-kicker">Contact</p>
-          <h2>欢迎交流金融前端、图表工程和开源项目。</h2>
+          <p className="section-kicker">联系我</p>
+          <h2>欢迎交流金融前端、图表工程、开源协作与产品实现。</h2>
         </div>
         <div className="contact-actions">
-          <a className="icon-link" href={`mailto:${profile.email}`} aria-label="Send email">
+          <a className="icon-link" href={`mailto:${profile.email}`} aria-label="发送邮件">
             <Mail size={21} aria-hidden="true" />
           </a>
-          <a className="icon-link" href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub profile">
-            <Github size={21} aria-hidden="true" />
+          <a className="icon-link" href={profile.github} target="_blank" rel="noreferrer" aria-label="访问代码主页">
+            <GitBranch size={21} aria-hidden="true" />
           </a>
-          <div className="wechat" aria-label="WeChat QR code">
-            <button className="icon-link" type="button" aria-label="Show WeChat QR code">
+          <div className="wechat" aria-label="微信二维码">
+            <button className="icon-link" type="button" aria-label="显示微信二维码">
               <MessageCircle size={21} aria-hidden="true" />
             </button>
             <div className="qr-panel">
-              <img src={qrcode} alt="liihuu WeChat QR code" />
+              <img src={qrcode} alt="liihuu 微信二维码" />
             </div>
           </div>
         </div>
@@ -176,4 +223,7 @@ function App () {
   )
 }
 
-createRoot(document.getElementById('root')).render(<App />)
+const rootElement = document.getElementById('root')
+const root = rootElement.__reactRoot ?? createRoot(rootElement)
+rootElement.__reactRoot = root
+root.render(<App />)
