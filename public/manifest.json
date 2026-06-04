@@ -1,0 +1,16 @@
+{
+  "short_name": "liihuu",
+  "name": "liihuu - 金融前端工程师与 KLineChart 作者",
+  "icons": [
+    {
+      "src": "/avatar.jpg",
+      "sizes": "360x360",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#071018",
+  "background_color": "#071018"
+}
