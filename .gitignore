@@ -3,3 +3,4 @@ misc.xml
 /node_modules
 /build
 /dist
+/.vite
