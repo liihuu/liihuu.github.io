@@ -24,7 +24,7 @@ function App () {
       <ChartBackground />
       <main className="shell">
         <section className="profile">
-          <img className="avatar" src="/avatar.jpg" alt="" width={128} height={128} />
+          <img className="avatar" src="/avatar.jpg" alt="liihuu 头像" width={128} height={128} fetchPriority="high" />
           <h1>{profile.name}</h1>
           <p className="role">{profile.role}</p>
           <div className="bio">

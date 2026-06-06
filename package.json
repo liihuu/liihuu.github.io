@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "og": "node scripts/generate-og.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "deploy": "pnpm build && gh-pages -d dist"
   },
@@ -17,6 +18,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",
     "gh-pages": "^6.3.0",
+    "sharp": "^0.34.5",
     "vite": "^8.0.16"
   },
   "packageManager": "pnpm@10.4.1"

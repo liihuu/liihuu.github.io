@@ -1,6 +1,8 @@
 {
   "short_name": "liihuu",
-  "name": "liihuu - 金融前端工程师与 KLineChart 作者",
+  "name": "liihuu · 前端开发工程师 · KLineChart 作者",
+  "description": "liihuu 的个人主页，聚焦金融前端工程、数据可视化与 KLineChart。",
+  "lang": "zh-CN",
   "icons": [
     {
       "src": "/avatar.jpg",

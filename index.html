@@ -8,55 +8,109 @@
       name="description"
       content="liihuu — 专注行情交易前端与 K 线可视化，开源项目 KLineChart 作者。多年金融前端经验，构建清晰、稳定、可扩展的市场界面。"
     />
+    <meta
+      name="keywords"
+      content="liihuu,KLineChart,K线图表,金融前端,前端开发工程师,数据可视化,行情交易,开源项目"
+    />
     <meta name="author" content="liihuu" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <meta name="theme-color" content="#020208" />
     <link rel="canonical" href="https://liihuu.me/" />
     <link rel="icon" type="image/jpeg" href="/avatar.jpg" />
+    <link rel="apple-touch-icon" href="/avatar.jpg" />
     <link rel="manifest" href="/manifest.json" />
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="profile" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content="liihuu" />
     <meta property="og:url" content="https://liihuu.me/" />
-    <meta property="og:title" content="liihuu - 金融前端工程师与 KLineChart 作者" />
+    <meta property="og:title" content="liihuu · 前端开发工程师 · KLineChart 作者" />
     <meta
       property="og:description"
-      content="金融前端工程师，开源项目 KLineChart 作者，关注高性能图表、复杂数据界面与前端工程化。"
+      content="liihuu — 专注行情交易前端与 K 线可视化，开源项目 KLineChart 作者。多年金融前端经验，构建清晰、稳定、可扩展的市场界面。"
     />
     <meta property="og:image" content="https://liihuu.me/og-image.jpg" />
+    <meta property="og:image:alt" content="liihuu · 前端开发工程师 · KLineChart 作者" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="profile:username" content="liihuu" />
+
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="liihuu - 金融前端工程师与 KLineChart 作者" />
+    <meta name="twitter:title" content="liihuu · 前端开发工程师 · KLineChart 作者" />
     <meta
       name="twitter:description"
-      content="金融前端工程师，开源项目 KLineChart 作者，关注高性能图表、复杂数据界面与前端工程化。"
+      content="liihuu — 专注行情交易前端与 K 线可视化，开源项目 KLineChart 作者。多年金融前端经验，构建清晰、稳定、可扩展的市场界面。"
     />
     <meta name="twitter:image" content="https://liihuu.me/og-image.jpg" />
+    <meta name="twitter:image:alt" content="liihuu · 前端开发工程师 · KLineChart 作者" />
 
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "liihuu",
-        "url": "https://liihuu.me/",
-        "jobTitle": "前端开发工程师",
-        "description": "专注金融前端工程与数据可视化，也是开源项目 KLineChart 的作者。",
-        "email": "mailto:hu_li888@foxmail.com",
-        "sameAs": [
-          "https://github.com/liihuu",
-          "https://github.com/klinecharts/KLineChart",
-          "https://weibo.com/u/2378413570"
-        ],
-        "knowsAbout": [
-          "金融前端工程",
-          "K 线图表",
-          "前端工程化",
-          "数据可视化",
-          "开源项目"
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://liihuu.me/#person",
+            "name": "liihuu",
+            "url": "https://liihuu.me/",
+            "image": "https://liihuu.me/avatar.jpg",
+            "jobTitle": "前端开发工程师",
+            "description": "专注金融前端工程与数据可视化，也是开源项目 KLineChart 的作者。",
+            "email": "hu_li888@foxmail.com",
+            "sameAs": [
+              "https://github.com/liihuu",
+              "https://github.com/klinecharts/KLineChart",
+              "https://weibo.com/u/2378413570"
+            ],
+            "knowsAbout": [
+              "金融前端工程",
+              "K 线图表",
+              "前端工程化",
+              "数据可视化",
+              "开源项目"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://liihuu.me/#website",
+            "url": "https://liihuu.me/",
+            "name": "liihuu",
+            "description": "liihuu 的个人主页，聚焦金融前端工程、数据可视化与 KLineChart。",
+            "inLanguage": "zh-CN",
+            "author": { "@id": "https://liihuu.me/#person" },
+            "primaryImageOfPage": {
+              "@type": "ImageObject",
+              "url": "https://liihuu.me/og-image.jpg",
+              "width": 1200,
+              "height": 630
+            }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "KLineChart",
+            "url": "https://github.com/klinecharts/KLineChart",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Web",
+            "description": "轻量级 K 线图表库，适用于金融行情与数据可视化场景。",
+            "author": { "@id": "https://liihuu.me/#person" }
+          }
         ]
       }
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main>
+        <img src="/avatar.jpg" alt="liihuu 头像" width="128" height="128" />
+        <h1>liihuu</h1>
+        <p>前端开发工程师</p>
+        <p>多年金融行业经验，擅长行情交易类产品开发。开源项目 <a href="https://github.com/klinecharts/KLineChart">KLineChart</a> 的作者。</p>
+        <nav aria-label="联系方式">
+          <a href="mailto:hu_li888@foxmail.com">邮箱</a>
+          <a href="https://github.com/liihuu">GitHub</a>
+        </nav>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
