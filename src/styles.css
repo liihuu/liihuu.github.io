@@ -1,14 +1,14 @@
 :root {
-  --bg: #030408;
-  --accent-rgb: 92, 132, 182;
+  --bg: #020208;
+  --accent-rgb: 34, 211, 238;
   /* 文字层级：由亮到暗 */
-  --fg-1: #e8e9ef;
-  --fg-2: #aeb0bc;
-  --fg-3: #787a88;
-  --fg-4: #4e505c;
-  --line: #1a1c26;
-  --accent: #7299c8;
-  --accent-muted: rgba(var(--accent-rgb), 0.38);
+  --fg-1: #f2f4ff;
+  --fg-2: #b8c2e8;
+  --fg-3: #7b86b0;
+  --fg-4: #4d5678;
+  --line: rgba(var(--accent-rgb), 0.22);
+  --accent: #22d3ee;
+  --accent-muted: rgba(var(--accent-rgb), 0.42);
   --font: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
   --w: 520px;
@@ -63,11 +63,21 @@ button {
   position: relative;
   min-height: 100%;
   overflow-x: hidden;
+  isolation: isolate;
+}
+
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* ── Shell ── */
 
 .shell {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -93,6 +103,7 @@ button {
   object-fit: cover;
   border-radius: 50%;
   border: 1px solid var(--line);
+  box-shadow: 0 0 28px rgba(var(--accent-rgb), 0.18);
   margin-bottom: 32px;
 }
 
@@ -109,7 +120,7 @@ button {
   margin: 12px 0 0;
   font-size: var(--text-role);
   font-weight: 500;
-  color: var(--fg-2);
+  color: var(--fg-1);
 }
 
 .bio {
@@ -129,8 +140,8 @@ button {
 }
 
 .bio a {
-  color: var(--fg-2);
-  border-bottom: 1px solid var(--accent-muted);
+  color: var(--fg-1);
+  border-bottom: 1px solid var(--fg-1);
   transition: color 0.2s, border-color 0.2s;
 }
 
@@ -165,14 +176,13 @@ button {
 
 .contact a:hover,
 .contact button:hover {
-  color: var(--fg-2);
+  color: var(--accent);
 }
 
 .contact svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  transition: color 0.2s var(--ease);
 }
 
 .wechat {
@@ -234,6 +244,10 @@ button {
   .contact,
   .footer {
     animation: none;
+  }
+
+  .bg-canvas {
+    opacity: 0.85;
   }
 }
 

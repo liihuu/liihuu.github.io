@@ -2,11 +2,12 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 
 import qrcode from './assets/qrcode.png'
+import ChartBackground from './ChartBackground'
 import './styles.css'
 
 const profile = {
   name: 'liihuu',
-  role: '前端工程师',
+  role: '前端开发工程师',
   email: 'hu_li888@foxmail.com',
   github: 'https://github.com/liihuu',
   klineChart: 'https://github.com/klinecharts/KLineChart'
@@ -15,6 +16,7 @@ const profile = {
 function App () {
   return (
     <div className="page">
+      <ChartBackground />
       <main className="shell">
         <section className="profile">
           <img className="avatar" src="/avatar.jpg" alt="" width={128} height={128} />
