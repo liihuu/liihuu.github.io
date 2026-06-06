@@ -1,15 +1,14 @@
 import { useEffect, useRef } from 'react'
 
-const BG_RGB = '2, 2, 8'
 const PARTICLE_COUNT = 72
 
 function lerp (a, b, t) {
   return a + (b - a) * t
 }
 
-function readAccent () {
+function readCssVar (name) {
   return getComputedStyle(document.documentElement)
-    .getPropertyValue('--accent-rgb')
+    .getPropertyValue(name)
     .trim()
 }
 
@@ -36,13 +35,13 @@ function drawParticles (ctx, particles, t, accent) {
   }
 }
 
-function drawMouseGlow (ctx, width, height, mx, my, accent) {
+function drawMouseGlow (ctx, width, height, mx, my, accent, bgRgb) {
   const cx = mx * width
   const cy = my * height
   const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300)
   glow.addColorStop(0, `rgba(${accent}, 0.12)`)
   glow.addColorStop(0.4, `rgba(${accent}, 0.04)`)
-  glow.addColorStop(1, `rgba(${BG_RGB}, 0)`)
+  glow.addColorStop(1, `rgba(${bgRgb}, 0)`)
 
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, width, height)
@@ -61,7 +60,8 @@ export default function ChartBackground () {
 
     let animationId = 0
     let particles = []
-    let accent = readAccent()
+    let accent = readCssVar('--accent-rgb')
+    let bgRgb = readCssVar('--bg-rgb')
     let dpr = 1
     let width = 0
     let height = 0
@@ -84,7 +84,8 @@ export default function ChartBackground () {
       canvas.style.height = `${height}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      accent = readAccent()
+      accent = readCssVar('--accent-rgb')
+      bgRgb = readCssVar('--bg-rgb')
       particles = Array.from({ length: PARTICLE_COUNT }, () => createParticle(width, height))
     }
 
@@ -159,11 +160,14 @@ export default function ChartBackground () {
 
       ctx.clearRect(0, 0, width, height)
 
+      accent = readCssVar('--accent-rgb')
+      bgRgb = readCssVar('--bg-rgb')
+
       updateParticles()
       drawParticles(ctx, particles, time, accent)
 
       if (mouseActive && finePointer) {
-        drawMouseGlow(ctx, width, height, mx, my, accent)
+        drawMouseGlow(ctx, width, height, mx, my, accent, bgRgb)
       }
 
       if (!reducedMotion) {

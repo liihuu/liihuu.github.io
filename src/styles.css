@@ -1,22 +1,54 @@
-:root {
+:root,
+[data-bg-theme="dark"] {
+  color-scheme: dark;
   --bg: #020208;
-  --accent-rgb: 34, 211, 238;
+  --bg-rgb: 2, 2, 8;
+}
+
+[data-bg-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f7fc;
+  --bg-rgb: 245, 247, 252;
+}
+
+:root,
+[data-theme="dark"] {
+  --surface: rgba(2, 2, 8, 0.72);
+  --accent-rgb: 147, 197, 253;
+  --accent: #93c5fd;
   /* 文字层级：由亮到暗 */
   --fg-1: #f2f4ff;
-  --fg-2: #b8c2e8;
-  --fg-3: #7b86b0;
+  --fg-2: #b0b0b8;
+  --fg-3: #85858f;
   --fg-4: #4d5678;
+}
+
+[data-theme="light"] {
+  --surface: rgba(255, 255, 255, 0.82);
+  --accent-rgb: 59, 130, 246;
+  --accent: #3b82f6;
+  --fg-1: #0f1220;
+  --fg-2: #5f5f68;
+  --fg-3: #82828a;
+  --fg-4: #939bb8;
+}
+
+:root {
   --line: rgba(var(--accent-rgb), 0.22);
-  --accent: #22d3ee;
   --accent-muted: rgba(var(--accent-rgb), 0.42);
   --font: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --w: 520px;
-  --avatar: 128px;
-  --text-name: clamp(2.75rem, 9vw, 3.5rem);
+  --w: 600px;
+  --avatar: 140px;
+  --text-name: clamp(3rem, 10vw, 4rem);
   --text-role: 1.125rem;
   --text-body: 1.125rem;
   --text-meta: 1rem;
+  --text-small: 0.9375rem;
+  --space-section: 72px;
+  --space-block: 40px;
+  --space-tight: 16px;
+  --space-avatar: 32px;
 }
 
 *,
@@ -32,11 +64,11 @@ body {
 
 body {
   margin: 0;
-  color: var(--fg-2);
+  color: var(--fg-1);
   background: var(--bg);
   font-family: var(--font);
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -73,20 +105,102 @@ button {
   pointer-events: none;
 }
 
+/* ── Theme transition ── */
+
+.theme-transition__sheet-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.theme-transition__sheet {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* ── Theme toggle ── */
+
+.theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  margin: 0;
+  color: var(--fg-1);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  animation: fade-in 0.7s var(--ease) both;
+  transition: color 0.35s var(--ease);
+  will-change: transform, opacity;
+}
+
+.theme-toggle:hover {
+  color: var(--accent);
+}
+
+.theme-toggle.is-switching {
+  pointer-events: none;
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.theme-toggle__icon {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.theme-toggle__glyph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: rotate(-72deg) scale(0.55);
+  transition:
+    opacity 0.4s var(--ease),
+    transform 0.4s var(--ease),
+    color 0.35s var(--ease);
+  pointer-events: none;
+}
+
+.theme-toggle__glyph.is-active {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* ── Shell ── */
 
 .shell {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 48px;
+  gap: var(--space-section);
   min-height: 100vh;
   width: min(var(--w), calc(100% - 48px));
   margin-inline: auto;
-  padding: 56px 0;
+  padding: 80px 0;
 }
 
 .profile {
@@ -103,40 +217,37 @@ button {
   object-fit: cover;
   border-radius: 50%;
   border: 1px solid var(--line);
-  box-shadow: 0 0 28px rgba(var(--accent-rgb), 0.18);
-  margin-bottom: 32px;
+  box-shadow: 0 0 48px rgba(var(--accent-rgb), 0.28);
+  margin-bottom: var(--space-avatar);
 }
 
 .profile h1 {
   margin: 0;
   font-size: var(--text-name);
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   color: var(--fg-1);
 }
 
 .role {
-  margin: 12px 0 0;
+  margin: var(--space-tight) 0 0;
   font-size: var(--text-role);
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
   color: var(--fg-1);
 }
 
 .bio {
-  margin: 28px 0 0;
-  max-width: 40ch;
+  margin: var(--space-block) 0 0;
+  max-width: 44ch;
 }
 
 .bio p {
   margin: 0;
   font-size: var(--text-body);
-  line-height: 1.8;
-  color: var(--fg-3);
-}
-
-.bio p + p {
-  margin-top: 10px;
+  line-height: 1.75;
 }
 
 .bio a {
@@ -158,7 +269,7 @@ button {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 10px 28px;
+  gap: 16px 40px;
   animation: fade-in 0.7s var(--ease) 0.08s both;
 }
 
@@ -169,7 +280,7 @@ button {
   gap: 8px;
   padding: 6px 4px;
   font-size: var(--text-meta);
-  color: var(--fg-3);
+  color: var(--fg-2);
   border-radius: 6px;
   transition: color 0.2s var(--ease);
 }
@@ -180,8 +291,8 @@ button {
 }
 
 .contact svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -223,8 +334,9 @@ button {
 }
 
 .footer {
-  font-size: 0.875rem;
-  color: var(--fg-4);
+  font-size: var(--text-small);
+  line-height: 1.5;
+  color: var(--fg-2);
   animation: fade-in 0.7s var(--ease) 0.14s both;
 }
 
@@ -242,8 +354,18 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .profile,
   .contact,
-  .footer {
+  .footer,
+  .theme-toggle {
     animation: none;
+  }
+
+  .theme-toggle__glyph {
+    transform: none;
+    transition: opacity 0.15s var(--ease);
+  }
+
+  .theme-toggle__glyph.is-active {
+    transform: none;
   }
 
   .bg-canvas {
@@ -253,21 +375,25 @@ button {
 
 @media (max-width: 480px) {
   :root {
-    --avatar: 108px;
-    --text-body: 1.0625rem;
-    --text-role: 1.0625rem;
+    --avatar: 120px;
+    --text-name: clamp(2.625rem, 12vw, 3.25rem);
+    --space-section: 56px;
+    --space-block: 32px;
+    --space-avatar: 28px;
+  }
+
+  .theme-toggle {
+    top: 16px;
+    right: 16px;
+    padding: 6px;
+  }
+
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
   }
 
   .shell {
-    gap: 40px;
-    padding: 40px 0;
-  }
-
-  .avatar {
-    margin-bottom: 26px;
-  }
-
-  .bio {
-    margin-top: 22px;
+    padding: 56px 0;
   }
 }

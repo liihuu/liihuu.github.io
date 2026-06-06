@@ -3,7 +3,11 @@ import { createRoot } from 'react-dom/client'
 
 import qrcode from './assets/qrcode.png'
 import ChartBackground from './ChartBackground'
+import ThemeSwitcher from './ThemeSwitcher'
+import { applyTheme, getStoredTheme } from './themes'
 import './styles.css'
+
+applyTheme(getStoredTheme())
 
 const profile = {
   name: 'liihuu',
@@ -16,6 +20,7 @@ const profile = {
 function App () {
   return (
     <div className="page">
+      <ThemeSwitcher />
       <ChartBackground />
       <main className="shell">
         <section className="profile">
