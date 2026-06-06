@@ -97,19 +97,37 @@
         ]
       }
     </script>
+    <script>
+      (function () {
+        var theme = localStorage.getItem('theme')
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        }
+        document.documentElement.dataset.bgTheme = theme
+        document.documentElement.dataset.theme = theme
+      })()
+    </script>
+    <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div id="root">
-      <main>
-        <img src="/avatar.jpg" alt="liihuu 头像" width="128" height="128" />
-        <h1>liihuu</h1>
-        <p>前端开发工程师</p>
-        <p>多年金融行业经验，擅长行情交易类产品开发。开源项目 <a href="https://github.com/klinecharts/KLineChart">KLineChart</a> 的作者。</p>
-        <nav aria-label="联系方式">
-          <a href="mailto:hu_li888@foxmail.com">邮箱</a>
-          <a href="https://github.com/liihuu">GitHub</a>
-        </nav>
-      </main>
+      <div class="page">
+        <main class="shell">
+          <section class="profile">
+            <img class="avatar" src="/avatar.jpg" alt="liihuu 头像" width="128" height="128" fetchpriority="high" />
+            <h1>liihuu</h1>
+            <p class="role">前端开发工程师</p>
+            <div class="bio">
+              <p>多年金融行业经验，擅长行情交易类产品开发。</p>
+              <p>开源项目 <a href="https://github.com/klinecharts/KLineChart">KLineChart</a> 的作者。</p>
+            </div>
+          </section>
+          <nav class="contact" aria-label="联系方式">
+            <a href="mailto:hu_li888@foxmail.com">邮箱</a>
+            <a href="https://github.com/liihuu">GitHub</a>
+          </nav>
+        </main>
+      </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
