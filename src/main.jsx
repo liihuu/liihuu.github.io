@@ -12,52 +12,9 @@ const profile = {
   klineChart: 'https://github.com/klinecharts/KLineChart'
 }
 
-const particles = Array.from({ length: 18 }, (_, i) => i)
-
 function App () {
   return (
     <div className="page">
-      <div className="bg" aria-hidden="true">
-        <div className="bg__beam" />
-        <div className="bg__grid" />
-        <div className="bg__glow bg__glow--a" />
-        <div className="bg__glow bg__glow--b" />
-        <div className="bg__particles">
-          {particles.map((i) => (
-            <span key={i} className="bg__dot" />
-          ))}
-        </div>
-        <div className="bg__flux">
-          {Array.from({ length: 12 }, (_, i) => (
-            <span key={i} />
-          ))}
-        </div>
-        <div className="bg__rings">
-          <span className="bg__ring" />
-          <span className="bg__ring" />
-          <span className="bg__ring" />
-        </div>
-        <div className="bg__shapes">
-          <span className="bg__shape bg__shape--1" />
-          <span className="bg__shape bg__shape--2" />
-          <span className="bg__shape bg__shape--3" />
-          <span className="bg__shape bg__shape--4" />
-        </div>
-        <div className="bg__corners">
-          <span className="bg__corner bg__corner--tl" />
-          <span className="bg__corner bg__corner--tr" />
-          <span className="bg__corner bg__corner--bl" />
-          <span className="bg__corner bg__corner--br" />
-        </div>
-        <div className="ambient">
-          <div className="orb">
-            <div className="orb__shell" />
-            <div className="orb__shell orb__shell--b" />
-            <div className="orb__core" />
-          </div>
-        </div>
-      </div>
-
       <main className="shell">
         <section className="profile">
           <img className="avatar" src="/avatar.jpg" alt="" width={128} height={128} />
