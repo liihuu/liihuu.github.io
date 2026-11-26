@@ -331,7 +331,7 @@ export function makeAtlas () {
       grad.addColorStop(0,'rgba(59,39,31,'+alpha+')');grad.addColorStop(1,'rgba(59,39,31,0)')
       g.fillStyle=grad;g.fillRect(-1,-1,2,2);g.restore()
     }
-    shade(505,190,500,260,.34);shade(385,505,124,115,.38);shade(884,606,88,63,.42)
+    shade(505,190,500,260,.34);shade(385,505,124,115,.38)
     for(const [x,y] of [[167,99],[167,326],[810,188]])shade(x,y,75,45,.34)
   })
   region(0,1480,1000,480,()=>{

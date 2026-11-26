@@ -120,30 +120,62 @@ export function studioModel () {
     box(x,2.65+h/2,-1.885,.116,h,.018,color)
     box(1.02+i*.14,2.71,-1.877,.08,.014,.012,cream)
   })
-  function plant(x,y,z,s) {
-    tube([x,y,z],[x,y+.37*s,z],.18*s,.23*s,'#cd815d')
-    tube([x,y+.34*s,z],[x,y+.39*s,z],.24*s,.24*s,'#dfa17c')
-    tube([x,y+.39*s,z],[x,y+.397*s,z],.205*s,.205*s,'#59483b')
-    for(let i=0;i<9;i++){
-      const a=i*2.4
-      const tip=[x+Math.cos(a)*s*.35,y+(.62+.32*(.5+.5*Math.sin(i*1.9)))*s,z+Math.sin(a)*s*.33]
-      tube([x,y+.39*s,z],tip,.012*s,.008*s,'#476446')
-      // A folded, tapered blade with a raised midrib and drooping tip.
-      let last
-      for(let j=0;j<=8;j++){
-        const t=j/8, spread=.107*s*Math.sin(t*Math.PI)**.85
-        const mid=[tip[0]+s*.27*t*Math.cos(a),tip[1]+s*(.18*Math.sin(t*Math.PI)-.10*t),tip[2]+s*.27*t*Math.sin(a)]
-        const left=[mid[0]-Math.sin(a)*spread,mid[1]-.36*spread,mid[2]+Math.cos(a)*spread]
-        const right=[mid[0]+Math.sin(a)*spread,mid[1]-.36*spread,mid[2]-Math.cos(a)*spread]
-        if(last){
-          quad(last[0],left,mid,last[1],i%2?'#749666':'#507758')
-          quad(last[1],mid,right,last[2],i%2?'#90ae77':'#658c63')
-        }
-        last=[left,mid,right]
+  function planter(x,y,z,r,h,color){
+    tube([x,y,z],[x,y+.94*h,z],r*.76,r,color)
+    const soilY=y+h*.94+.001
+    tube([x,soilY,z],[x,soilY+.002,z],r*.91,r*.91,'#504336')
+    for(let i=0;i<32;i++){
+      const at=(k,radius,height)=>[x+radius*Math.cos(k*TAU/32),height,z+radius*Math.sin(k*TAU/32)]
+      const lip=[[r,y+.94*h],[r*1.015,y+h],[r*.90,y+h],[r*.90,soilY]]
+      for(let j=1;j<lip.length;j++){
+        quad(at(i,...lip[j-1]),at(i,...lip[j]),at(i+1,...lip[j]),at(i+1,...lip[j-1]),color)
       }
     }
+    return soilY+.003
   }
-  plant(2.17,2.65,-1.98,.69)
+  // Shape each blade around a curved midrib, with cupped sides and a turned tip.
+  function leaf(base,angle,length,width,rise,droop,tilt,color){
+    const dx=Math.cos(angle),dz=Math.sin(angle)
+    let previous
+    for(let j=0;j<=10;j++){
+      const t=j/10
+      const half=width*Math.sin(Math.PI*t)**.78*(1.18-.45*t)
+      const bend=.13*length*t*t
+      const mid=[base[0]+dx*length*t-dz*bend,base[1]+rise*t-droop*t*t,
+        base[2]+dz*length*t+dx*bend]
+      const row=[-1,-.45,0,.45,1].map(u=>[mid[0]-dz*half*u,
+        mid[1]+half*(u*tilt-.26*u*u),mid[2]+dx*half*u])
+      if(previous)for(let k=0;k<4;k++)quad(previous[k],previous[k+1],row[k+1],row[k],color)
+      previous=row
+    }
+  }
+
+  // Pothos vines rest on the front lip before hanging down past the shelf.
+  const shelfSoil=planter(2.17,2.65,-1.98,.155,.22,'#b9bba4')
+  const vineGreens=['#708b53','#527447','#80935c','#5e804e']
+  for(let i=0;i<8;i++){
+    const a=i*2.4, height=.07+.045*Math.sin(i*1.8)
+    const root=[2.17+.035*Math.cos(a),shelfSoil,-1.98+.035*Math.sin(a)]
+    const petiole=[root[0]+.042*Math.cos(a),root[1]+height,root[2]+.042*Math.sin(a)]
+    tube(root,petiole,.005,.003,'#66804e')
+    leaf(petiole,a,.117,.054,.052,.079,.35*Math.cos(a),vineGreens[i%4])
+  }
+  for(let v=0;v<4;v++){
+    const direction=[.7,2.15,1.38,-.35][v]
+    const count=[9,7,5,4][v]
+    let node=[2.17,shelfSoil,-1.98]
+    for(let j=1;j<=count;j++){
+      const reach=.092*Math.min(j,3)+.017*Math.max(0,j-3)
+      const next=[2.17+Math.cos(direction)*reach+.019*Math.sin(j*.81+v),
+        shelfSoil+.068*Math.sin(Math.min(j,3)*Math.PI/3)-.063*Math.max(0,j-3),
+        -1.98+Math.sin(direction)*reach]
+      tube(node,next,.006,.005,'#66804e')
+      const angle=direction+(j%2?1:-1)*(.76+.14*Math.sin(j+v))
+      const size=1-.042*j
+      leaf(next,angle,.128*size,.059*size,.055,.115*size,.38*Math.sin(j+v),vineGreens[(j+v)%4])
+      node=next
+    }
+  }
 
   // A broad wooden desk, trestles, drawer cabinet, keyboard and mug.
   shell(.12,-.98,[[1.145,4.70,1.69,.075],[1.17,4.75,1.74,.08],[1.28,4.75,1.74,.08],[1.295,4.72,1.71,.07]],wood)
@@ -254,6 +286,5 @@ export function studioModel () {
     shell(px+side*.41,pz-.045,[[1.025,.091,.33,.039],[1.058,.109,.35,.042],[1.07,.091,.33,.039]],'#334846')
   }
   buildDeveloper({tri,oval,tube,shell})
-  plant(2.38,.035,1.35,1.13)
   return new Float32Array(vertices)
 }
