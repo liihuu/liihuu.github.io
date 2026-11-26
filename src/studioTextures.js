@@ -1,3 +1,4 @@
+import { lampBase } from './taskLamp'
 import { profile } from './studioObjects'
 
 export function drawScreen (g) {
@@ -172,6 +173,32 @@ export function makeAtlas () {
       for(let x=0;x<=500;x+=6)g.lineTo(x,275+i*82+63*Math.sin(x*.010+i*1.3))
       g.lineTo(500,550);g.fill()
     }
+  })
+  region(0,1480,1000,480,()=>{
+    g.fillStyle='#bd895f';g.fillRect(0,0,1000,480)
+    // Long, irregular grain and low contact shadows in tabletop coordinates.
+    for(let i=0;i<185;i++){
+      const y=i*2.65, x=(i*137)%1160-230
+      g.strokeStyle=i%4?'rgba(105,67,44,.11)':'rgba(246,201,147,.22)'
+      g.lineWidth=i%3===0?1.25:.65
+      g.beginPath();g.moveTo(x,y)
+      g.bezierCurveTo(x+115,y-9*Math.sin(i*.11),x+209,y+12*Math.cos(i*.12),x+325+i%190,y+2)
+      g.stroke()
+    }
+    for(const [x,y,rx,ry] of [[485,130,150,67],[(lampBase[0]+2.20)/4.64*1000,(lampBase[2]+1.80)/1.64*480,55,58],[854,261,47,42],[925,90,68,30],[492,360,307,87]]){
+      g.save();g.translate(x,y);g.scale(rx,ry)
+      const shadow=g.createRadialGradient(0,0,.06,0,0,1)
+      shadow.addColorStop(0,'#46342577');shadow.addColorStop(1,'#46342500')
+      g.fillStyle=shadow;g.fillRect(-1,-1,2,2);g.restore()
+    }
+  })
+  region(1090,1300,624,160,()=>{
+    const rows=['1234567890-+=','QWERTYUIOP[]↵','ASDFGHJKL;’↑↵','⇧ZX      ←↓→ ']
+    rows.forEach((row,r)=>Array.from(row).forEach((label,c)=>{
+      g.fillStyle=c===12?'#d89a74':'#dddacb';g.fillRect(c*48,r*40,48,40)
+      g.fillStyle='#3c4945';g.font='bold 23px monospace';g.textAlign='center'
+      g.fillText(label,c*48+24,r*40+29)
+    }))
   })
   region(1060,1490,900,395,()=>{
     g.fillStyle='#f6e9cd';g.fillRect(0,0,900,395)

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { diffuserRadius, lampAxis, lampLight } from './taskLamp'
 import { studioModel } from './studioModel'
 import { createWindowSky, drawScreen, makeAtlas } from './studioTextures'
 
@@ -19,6 +20,7 @@ const vertexSource = `
   uniform float time;
   varying vec3 world;
   varying vec3 tint;
+  varying vec3 surfaceNormal;
   varying vec2 texcoord;
   void main() {
     vec3 p = position;
@@ -27,6 +29,7 @@ const vertexSource = `
     vec3 v = camera * (p-vec3(${centre.join(',')}));
     gl_Position = vec4(v.xy*scale, -v.z/12., 1.);
     float light = .76 + .28*max(dot(normal,normalize(vec3(-.56,.83,.68))),0.);
+    surfaceNormal=normal;
     tint = color*light;
     texcoord = uv;
   }`
@@ -37,6 +40,7 @@ const fragmentSource = `
   uniform float night;
   varying vec3 world;
   varying vec3 tint;
+  varying vec3 surfaceNormal;
   varying vec2 texcoord;
   void main() {
     bool outside = texcoord.x > .52 && texcoord.y >= 0. && texcoord.y < .32;
@@ -64,10 +68,13 @@ const fragmentSource = `
     daylight *= 1.-.24*wall*exp(-dot(shadow,shadow));
 
     // Warm task light falls onto the desk; the monitor casts a wide, cool fill.
-    vec3 lamp = world-vec3(-1.69,2.09,-1.43);
-    float spread=.26+.78*max(-lamp.y,0.);
-    float beam=exp(-dot(lamp.xz,lamp.xz)/(spread*spread))*
-      (1.-smoothstep(.0,.15,lamp.y))/(1.+.48*lamp.y*lamp.y);
+    vec3 lamp = world-vec3(${lampLight.join(',')});
+    vec3 direction=vec3(${lampAxis.join(',')});
+    float axial=dot(lamp,direction);
+    vec3 radial=lamp-axial*direction;
+    float spread=.19+.78*max(axial,0.);
+    float beam=exp(-dot(radial,radial)/(spread*spread))*
+      smoothstep(-.13,.0,axial)/(1.+.48*axial*axial);
     float bounce=1./(1.+2.7*dot(lamp,lamp));
     vec3 monitor=(world-vec3(.05,2.12,-1.25))*vec3(.69,.94,.72);
     float glow=1./(1.+1.4*dot(monitor,monitor));
@@ -75,9 +82,17 @@ const fragmentSource = `
     float moonlight=.65/(1.+dot(moon,moon));
     vec3 lamplight=base*(vec3(.19,.25,.38)+moonlight*vec3(.19,.29,.48)+
       (beam+.60*bounce)*vec3(1.25,.80,.34)+glow*vec3(.31,.57,.63));
-    bool bulb=length(lamp.xz)<.226 && abs(lamp.y)<.016;
+    bool bulb=length(radial)<${diffuserRadius} && abs(axial)<.002;
     if(bulb) lamplight=vec3(1.,.91,.63);
-    gl_FragColor=vec4(mix(daylight,lamplight,night),1.);
+    vec3 shaded=mix(daylight,lamplight,night);
+    // A broad window reflection gives rounded, dark hardware a satin finish.
+    vec3 n=surfaceNormal/max(length(surfaceNormal),.001);
+    vec3 halfVector=normalize(vec3(-.65,.78,.48)+vec3(.42,.30,.86));
+    float gloss=pow(max(dot(n,halfVector),0.),22.);
+    float hardware=(1.-smoothstep(.20,.43,max(base.r,max(base.g,base.b))))*
+      smoothstep(1.28,1.41,world.y);
+    shaded+=vec3(.14,.16,.16)*gloss*hardware*mix(1.,.42,night);
+    gl_FragColor=vec4(shaded,1.);
   }`
 
 function gpuRenderer (canvas, vertices, atlas) {
@@ -183,9 +198,11 @@ function softwareRenderer (canvas, vertices, atlas) {
           }
         }
         if(litSurface && night){
-          const lx=wx+1.69,ly=wy-2.09,lz=wz+1.43
-          const spread=.26+.78*Math.max(-ly,0)
-          const beam=Math.exp(-(lx*lx+lz*lz)/(spread*spread))*clamp(1-ly/.15,0,1)/(1+.48*ly*ly)
+          const lx=wx-lampLight[0],ly=wy-lampLight[1],lz=wz-lampLight[2]
+          const axial=lx*lampAxis[0]+ly*lampAxis[1]+lz*lampAxis[2]
+          const radialSq=Math.max(0,lx*lx+ly*ly+lz*lz-axial*axial)
+          const spread=.19+.78*Math.max(axial,0)
+          const beam=Math.exp(-radialSq/(spread*spread))*clamp(1+axial/.13,0,1)/(1+.48*axial*axial)
           const warm=beam+.6/(1+2.7*(lx*lx+ly*ly+lz*lz))
           const cool=1/(1+1.4*((.69*(wx-.05))**2+(.94*(wy-2.12))**2+(.72*(wz+1.25))**2))
           const moon=.65/(1+(.64*(wx+2.84))**2+(.66*(wy-2.12))**2+(.54*(wz+.08))**2)
