@@ -37,9 +37,6 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
 .detail .role { margin-top: 5px }
 .close { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; background: transparent; border: 1px solid #8a987c77; border-radius: 50%; font-size: 23px }
 .avatar { width: 56px; height: 56px; border-radius: 50%; margin-bottom: 16px }
-.project.detail { max-width: min(94vw,960px); background: #182b31; color: #d2e6db; border-color: #53736b }
-.project h2 { font: 600 clamp(24px,4vw,37px)/1.2 "Helvetica Neue",sans-serif }
-.project canvas { width: 100%; height: auto; display: block; margin: 12px 0 20px }
 .contact article > a { display: block; margin: 14px 0 }
 .contact figure { margin-top: 23px; font-size: 13px }
 .contact figure img { display: block; margin-bottom: 7px }

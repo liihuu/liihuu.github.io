@@ -12,8 +12,12 @@ const rgb = hex => [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)/255)
 
 export const drinkSurface=[1.78,1.554,-.91]
 
-export function studioModel () {
+export function studioModel (parts=[]) {
   const vertices = []
+  function part(kind){
+    if(parts.length)parts[parts.length-1].end=vertices.length
+    parts.push({kind,start:vertices.length,end:vertices.length})
+  }
   const colors = new Map()
   function tri (points, color, normals, uvs, movement = [0,0,0]) {
     if (!colors.has(color)) colors.set(color,rgb(color))
@@ -99,6 +103,7 @@ export function studioModel () {
     const l=x-width/2, r=x+width/2, top=y+height/2, bottom=y-height/2
     quad([l,bottom,z],[r,bottom,z],[r,top,z],[l,top,z],'#ffffff',uv(...texture))
   }
+  part('window')
   // A timber sash window looks out over the roofs at dusk.
   box(-2.94,2.05,-.08,.12,1.91,2.69,edge)
   quad([-2.865,1.18,1.18],[-2.865,1.18,-1.34],[-2.865,2.92,-1.34],[-2.865,2.92,1.18],'#ffffff',uv(1080,0,940,640))
@@ -108,11 +113,13 @@ export function studioModel () {
   box(-2.88,1.01,-.08,.22,.06,2.76,edge)
   box(-2.82,1.09,-.08,.34,.11,2.86,wood)
 
+  part('shelf')
   // Shelves, books and a trailing houseplant furnish the back wall.
   box(1.71,2.60,-1.99,1.95,.09,.45,wood)
   for(const x of [1.06,2.37]) box(x,2.49,-2.1,.08,.22,.13,edge)
   const spines=['#b85b42','#e5b871','#425e62','#f0d5a9','#658e84']
   spines.forEach((color,i)=>{
+    part('book')
     const h=.34+.11*Math.sin(i*1.8)
     const x=1.02+i*.14
     box(x,2.65+h/2,-2.0,.099,h-.018,.218,'#dfcfaf')
@@ -151,8 +158,10 @@ export function studioModel () {
   }
 
   // Pothos vines rest on the front lip before hanging down past the shelf.
+  part('pot')
   const shelfSoil=planter(2.17,2.65,-1.98,.155,.22,'#b9bba4')
   const vineGreens=['#708b53','#527447','#80935c','#5e804e']
+  part('leaves')
   for(let i=0;i<8;i++){
     const a=i*2.4, height=.07+.045*Math.sin(i*1.8)
     const root=[2.17+.035*Math.cos(a),shelfSoil,-1.98+.035*Math.sin(a)]
@@ -177,6 +186,7 @@ export function studioModel () {
     }
   }
 
+  part('desk')
   // A broad wooden desk, trestles, drawer cabinet, keyboard and mug.
   shell(.12,-.98,[[1.145,4.70,1.69,.075],[1.17,4.75,1.74,.08],[1.28,4.75,1.74,.08],[1.295,4.72,1.71,.07]],wood)
   quad([-2.20,1.296,-.16],[2.44,1.296,-.16],[2.44,1.296,-1.80],[-2.20,1.296,-1.80],'#ffffff',uv(0,1480,1000,480))
@@ -185,9 +195,14 @@ export function studioModel () {
   for(const z of [-1.66,-.32]) box(-1.97,.58,z,.15,1.15,.15,charcoal)
   box(1.82,.59,-.98,.85,1.14,1.34,'#57776d')
   for(let i=0;i<3;i++){
+    part('drawer')
+    const trayY=.26+i*.34
+    box(1.82,trayY-.08,-.52,.72,.025,.45,'#987e64')
+    for(const side of [-1,1])box(1.82+side*.35,trayY,-.52,.023,.18,.45,'#93775d')
     box(1.82,.28+i*.34,-.285,.79,.31,.05,'#759589')
     box(1.82,.34+i*.34,-.25,.25,.035,.035,charcoal)
   }
+  part('project')
   box(.05,1.32,-1.27,.82,.055,.43,charcoal)
   box(.05,1.56,-1.46,.13,.51,.12,charcoal)
   shell(.05,-1.47,[[1.39,3.13,.085,.034],[1.425,3.235,.17,.055],[2.77,3.235,.17,.055],[2.81,3.17,.12,.045]],'#505b60')
@@ -195,9 +210,11 @@ export function studioModel () {
   box(1.50,1.423,-1.346,.035,.008,.006,'#b1d5b1')
   for(let i=0;i<26;i++)box(-1.30+i*.101,2.799,-1.47,.059,.012,.043,'#2d393c')
   surface('project',[0,0,1024,440])
+  part('keyboard')
   const pitch=.099,keyboardLeft=-1.23
   shell(keyboardLeft+9.2*pitch,-.542,[[1.306,1.88,.652,.026],[1.337,1.88,.652,.026]],charcoal)
   for(const {row,column,width,color,atlasX,atlasY} of keyboardKeys){
+    part('key')
     const x=keyboardLeft+(column+width/2)*pitch
     const z=-.799+row*pitch+(row>0?.026:0)
     const base=width*pitch-.008,top=base-.012
@@ -206,6 +223,7 @@ export function studioModel () {
     quad([x-half,1.3805,z+.032],[x+half,1.3805,z+.032],[x+half,1.3805,z-.032],[x-half,1.3805,z-.032],
       '#ffffff',uv(atlasX+1,atlasY+1,width*48-2,32))
   }
+  part('mouse')
   // Longitudinal sections widen at the buttons, narrow at the grip and
   // rise into the palm rest. The lower lip sits flat on the desk mat.
   function mouseSurface(t,a){
@@ -246,6 +264,7 @@ export function studioModel () {
     const y=wheelY+.006+.021*Math.sqrt(1-(z/.032)**2)
     tube([wheelX-.005,y-.001,wheelZ+z],[wheelX+.005,y-.001,wheelZ+z],.0015,.0015,'#747a71')
   }
+  part('cup')
   const [cupX,liquidY,cupZ]=drinkSurface
   const cupProfile=[[.112,1.30],[.130,1.315],[.145,1.561],[.143,1.57],
     [.136,1.573],[.130,1.568],[.128,liquidY]]
@@ -263,12 +282,15 @@ export function studioModel () {
     const pos=t=>[1.91+.12*Math.sin(t),1.44+.09*Math.cos(t),-.91]
     tube(pos(i*Math.PI/12),pos((i+1)*Math.PI/12),.027,.027,'#e0ba83')
   }
+  part('contact')
   const card=objects.contact
   box(card.x,1.326,card.z-.025,card.width+.06,.062,.16,edge)
   box(card.x,card.y,card.z-.032,card.width+.035,card.height+.035,.06,cream)
   surface('contact',[1060,1490,900,395])
-  buildTaskLamp({tri,tube})
+  part('lamp')
+  buildTaskLamp({tri,tube,part})
 
+  part('chairBase')
   // The seated figure faces -Z, with elbows bent toward the keyboard.
   const px=-.68, pz=.77
   tube([px,.18,pz],[px,.77,pz],.066,.075,charcoal)
@@ -277,6 +299,7 @@ export function studioModel () {
     tube([px,.22,pz],end,.055,.052,charcoal)
     oval(end[0],.09,end[2],.085,.08,.079,'#344143')
   }
+  part('chair')
   oval(px,.74,pz,.47,.105,.42,teal)
   tube([px,.72,pz+.22],[px,1.30,pz+.43],.055,.055,charcoal)
   shell(px,pz+.43,[[.98,.53,.10,.038],[1.05,.77,.14,.054],[1.28,.81,.16,.065,.035],[1.44,.72,.14,.055,.04],[1.48,.60,.10,.045,.035]],'#385e59')
@@ -286,5 +309,6 @@ export function studioModel () {
     shell(px+side*.41,pz-.045,[[1.025,.091,.33,.039],[1.058,.109,.35,.042],[1.07,.091,.33,.039]],'#334846')
   }
   buildDeveloper({tri,oval,tube,shell})
+  parts[parts.length-1].end=vertices.length
   return new Float32Array(vertices)
 }
