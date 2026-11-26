@@ -1,3 +1,4 @@
+import { keyboardKeys } from './keyboardLayout'
 import { lampBase } from './taskLamp'
 import { profile } from './studioObjects'
 
@@ -333,15 +334,6 @@ export function makeAtlas () {
     shade(505,190,500,260,.34);shade(385,505,124,115,.38);shade(884,606,88,63,.42)
     for(const [x,y] of [[167,99],[167,326],[810,188]])shade(x,y,75,45,.34)
   })
-  region(1100,700,500,550,()=>{
-    g.fillStyle='#f7deb0';g.fillRect(0,0,500,550)
-    g.fillStyle='#d88b57';g.beginPath();g.arc(351,162,67,0,2*Math.PI);g.fill()
-    for(const [i,col] of ['#8dae98','#55877e','#375e60'].entries()){
-      g.fillStyle=col;g.beginPath();g.moveTo(0,550)
-      for(let x=0;x<=500;x+=6)g.lineTo(x,275+i*82+63*Math.sin(x*.010+i*1.3))
-      g.lineTo(500,550);g.fill()
-    }
-  })
   region(0,1480,1000,480,()=>{
     g.fillStyle='#bd895f';g.fillRect(0,0,1000,480)
     // Long, irregular grain and low contact shadows in tabletop coordinates.
@@ -360,14 +352,14 @@ export function makeAtlas () {
       g.fillStyle=shadow;g.fillRect(-1,-1,2,2);g.restore()
     }
   })
-  region(1090,1300,624,160,()=>{
-    const rows=['1234567890-+=','QWERTYUIOP[]↵','ASDFGHJKL;’↑↵','⇧ZX      ←↓→ ']
-    rows.forEach((row,r)=>Array.from(row).forEach((label,c)=>{
-      g.fillStyle=c===12?'#d89a74':'#dddacb';g.fillRect(c*48,r*40,48,40)
-      g.fillStyle='#3c4945';g.font='bold 23px monospace';g.textAlign='center'
-      g.fillText(label,c*48+24,r*40+29)
-    }))
-  })
+  for(const {label,width,color,atlasX,atlasY} of keyboardKeys){
+    const w=width*48
+    g.fillStyle=color
+    g.fillRect(atlasX,atlasY,w,34)
+    g.fillStyle='#39413e'
+    g.font=(label.length>2?'bold 14px':'bold 20px')+' monospace'
+    g.fillText(label,atlasX+5,atlasY+23,w-10)
+  }
   region(1060,1490,900,395,()=>{
     g.fillStyle='#f6e9cd';g.fillRect(0,0,900,395)
     g.fillStyle='#34554a';g.fillRect(0,0,16,395)

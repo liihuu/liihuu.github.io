@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { diffuserRadius, lampAxis, lampLight } from './taskLamp'
-import { studioModel } from './studioModel'
+import { drinkSurface, studioModel } from './studioModel'
 import { createWindowSky, chartStage, drawChartPreview, drawEditorCode, drawScreen, makeAtlas, typedCharacters } from './studioTextures'
 
 import ThemeSwitcher from './ThemeSwitcher'
@@ -242,8 +242,83 @@ function softwareRenderer (canvas, vertices, atlas) {
   }
 }
 
+// Transport vapour from a patch of warm liquid. Small moving eddies stretch
+// the density left by earlier frames; the upper edge fades as the air mixes.
+function createSteamPainter(canvas){
+  const ctx=canvas.getContext('2d')
+  const {width,height}=canvas
+  const image=ctx.createImageData(width,height)
+  let density=new Float32Array(width*height),next=density.slice()
+  const surface=Math.round(height*.9)
+  const hash=n=>{
+    const v=Math.sin(n*127.1+71.9)*43758.5453
+    return v-Math.floor(v)
+  }
+  let tick=0,previous=null,remainder=0
+  function step(){
+    const seconds=++tick/24
+    const vortices=[]
+    const birth=Math.floor(seconds/.86)
+    for(let n=birth-4;n<=birth;n++){
+      const age=seconds-n*.86
+      vortices.push({
+        x:width*.5+(hash(n)-.5)*19+age*2,
+        y:surface-4-age*(14+5*hash(n+9)),
+        spin:(n%2===0?1:-1)*1.15, radius:8+age*2
+      })
+    }
+    const sourceX=width*.5+4*Math.sin(seconds*1.1)+2*Math.sin(seconds*2.3)
+    for(let y=1;y<surface;y++){
+      const h=(surface-y)/surface
+      for(let x=1;x<width-1;x++){
+        let vx=1.1+3*h,vy=-16-7*h
+        for(const eddy of vortices){
+          const dx=x-eddy.x,dy=y-eddy.y
+          const r2=(dx*dx+dy*dy)/(eddy.radius*eddy.radius)
+          if(r2>=4)continue
+          const swirl=eddy.spin*(1-r2/4)**3
+          vx-=dy*swirl
+          vy+=dx*swirl
+        }
+        const px=clamp(x-vx/24,0,width-1.001),py=clamp(y-vy/24,0,height-1.001)
+        const ix=Math.floor(px),iy=Math.floor(py),u=px-ix,v=py-iy
+        const k=iy*width+ix
+        const above=density[k]*(1-u)+density[k+1]*u
+        const below=density[k+width]*(1-u)+density[k+width+1]*u
+        let amount=(above*(1-v)+below*v)*(.988-.025*h)
+        if(y>=surface-4){
+          const d=(x-sourceX)/7
+          amount+=.17*Math.exp(-d*d)*(.72+.28*Math.sin(seconds*2.4+x*.19))
+        }
+        next[y*width+x]=amount
+      }
+    }
+    const old=density;density=next;next=old
+  }
+  for(let i=0;i<64;i++)step()
+  return time=>{
+    if(previous!==null && time===previous)return
+    remainder+=previous===null?0:clamp(time-previous,0,.25)
+    previous=time
+    while(remainder>=1/24){step();remainder-=1/24}
+    for(let y=0;y<height;y++){
+      const edge=clamp((surface-y)/6,0,1)*clamp(y/14,0,1)
+      for(let x=0;x<width;x++){
+        const i=y*width+x
+        const opacity=1-Math.exp(-density[i]*1.9)
+        image.data[4*i]=240
+        image.data[4*i+1]=238
+        image.data[4*i+2]=231
+        image.data[4*i+3]=125*opacity*edge
+      }
+    }
+    ctx.putImageData(image,0,0)
+  }
+}
+
 export default function Studio () {
   const ref=useRef(null), fallback=useRef(null), dialog=useRef(null), detail=useRef(null)
+  const steam=useRef(null)
   const hitAreas=useRef({}), resetView=useRef(null)
   const [panel,setPanel]=useState(null)
   const [theme,setTheme]=useState(getStoredTheme)
@@ -268,6 +343,7 @@ export default function Studio () {
     const editorContext=editor.getContext('2d',{willReadFrequently:!gpu})
     editorContext.drawImage(atlas,0,0,1024,440,0,0,1024,440)
     editorImage.current=editor
+    const paintSteam=createSteamPainter(steam.current)
     const typingStart=performance.now()
     let previousCount=-1,previousStage=-1
     let night=getStoredTheme()==='dark'?1:0
@@ -294,6 +370,13 @@ export default function Studio () {
         if(dirty){
           // Map each object face into CSS pixels using the same orthographic camera.
           const unit=size/ratio
+          const [mx,my,mz]=drinkSurface.map((v,i)=>v-centre[i])
+          const puffScale=unit*.00345
+          const plume=steam.current.style
+          plume.width=96*puffScale+'px'
+          plume.height=160*puffScale*c+'px'
+          plume.left=w/(2*ratio)+unit*(a*mx-b*mz)-48*puffScale+'px'
+          plume.top=h/(2*ratio)-unit*(-b*d*mx+c*my-a*d*mz)-144*puffScale*c+'px'
           for(const [key,obj] of Object.entries(objects)){
             const node=hitAreas.current[key]
             const x=obj.x-obj.width/2-centre[0], y=obj.y+obj.height/2-centre[1], z=obj.z-centre[2]
@@ -319,6 +402,7 @@ export default function Studio () {
         previousStage=stage
         previousCount=count
         render(matrix,2*size/w,2*size/h,motion.matches?0:now/1000,night,changed?editor:null)
+        paintSteam(motion.matches?0:now/1000)
         lastDraw=now;dirty=false
       }
       if(!motion.matches)frame=requestAnimationFrame(draw)
@@ -383,6 +467,8 @@ export default function Studio () {
     <h1 className="sr-only">liihuu · 前端开发工程师 · KLineChart 作者</h1>
     <canvas className="room-canvas outline" ref={fallback} aria-hidden="true" />
     <canvas className="room-canvas" ref={ref} tabIndex="0" aria-label="程序员正在房间里敲代码。拖动或用方向键转动视角，Home 键复位。" />
+    <canvas ref={steam} width="64" height="96" aria-hidden="true"
+      style={{position:'absolute',pointerEvents:'none'}} />
     {Object.entries(objects).map(([key,obj])=>
       <button key={key} className="object-hit" aria-label={obj.label} aria-haspopup="dialog"
         ref={el=>{hitAreas.current[key]=el}} onClick={()=>openPanel(key)} />

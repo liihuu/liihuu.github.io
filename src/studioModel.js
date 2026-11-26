@@ -1,3 +1,4 @@
+import { keyboardKeys } from './keyboardLayout'
 import { buildDeveloper } from './developerFigure'
 import { buildTaskLamp } from './taskLamp'
 import { objects } from './studioObjects'
@@ -8,6 +9,8 @@ const sub = (a,b) => a.map((v,i) => v-b[i])
 const cross = (a,b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]
 const unit = v => v.map(n => n/(Math.hypot(...v)||1))
 const rgb = hex => [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)/255)
+
+export const drinkSurface=[1.78,1.554,-.91]
 
 export function studioModel () {
   const vertices = []
@@ -105,7 +108,7 @@ export function studioModel () {
   box(-2.88,1.01,-.08,.22,.06,2.76,edge)
   box(-2.82,1.09,-.08,.34,.11,2.86,wood)
 
-  // Shelves, a print, books and a trailing houseplant furnish the back wall.
+  // Shelves, books and a trailing houseplant furnish the back wall.
   box(1.71,2.60,-1.99,1.95,.09,.45,wood)
   for(const x of [1.06,2.37]) box(x,2.49,-2.1,.08,.22,.13,edge)
   const spines=['#b85b42','#e5b871','#425e62','#f0d5a9','#658e84']
@@ -141,8 +144,6 @@ export function studioModel () {
     }
   }
   plant(2.17,2.65,-1.98,.69)
-  box(-2.32,2.35,-2.16,.99,1.14,.09,edge)
-  quad([-2.76,1.84,-2.10],[-1.88,1.84,-2.10],[-1.88,2.86,-2.10],[-2.76,2.86,-2.10],'#ffffff',uv(1100,700,500,550))
 
   // A broad wooden desk, trestles, drawer cabinet, keyboard and mug.
   shell(.12,-.98,[[1.145,4.70,1.69,.075],[1.17,4.75,1.74,.08],[1.28,4.75,1.74,.08],[1.295,4.72,1.71,.07]],wood)
@@ -162,19 +163,70 @@ export function studioModel () {
   box(1.50,1.423,-1.346,.035,.008,.006,'#b1d5b1')
   for(let i=0;i<26;i++)box(-1.30+i*.101,2.799,-1.47,.059,.012,.043,'#2d393c')
   surface('project',[0,0,1024,440])
-  box(-.34,1.31,-.48,1.68,.055,.53,charcoal)
-  for(let row=0;row<4;row++)for(let col=0;col<13;col++){
-    if(row===3 && col>3 && col<9) continue
-    const space=row===3 && col===3
-    const x=-1.08+col*.123+(space?.3075:0), z=-.67+row*.123
-    const width=space?.71:.105
-    shell(x,z,[[1.337,width,.103,.012],[1.35,width,.103,.012],[1.38,width-.017,.082,.011]],col===12?'#cf8960':'#d9d6c6')
-    if(!space)quad([x-.036,1.381,z+.032],[x+.036,1.381,z+.032],[x+.036,1.381,z-.032],[x-.036,1.381,z-.032],'#ffffff',uv(1090+col*48,1300+row*40,48,40))
+  const pitch=.099,keyboardLeft=-1.23
+  shell(keyboardLeft+9.2*pitch,-.542,[[1.306,1.88,.652,.026],[1.337,1.88,.652,.026]],charcoal)
+  for(const {row,column,width,color,atlasX,atlasY} of keyboardKeys){
+    const x=keyboardLeft+(column+width/2)*pitch
+    const z=-.799+row*pitch+(row>0?.026:0)
+    const base=width*pitch-.008,top=base-.012
+    shell(x,z,[[1.337,base,.091,.008],[1.348,base,.091,.008],[1.38,top,.079,.007]],color)
+    const half=top/2-.005
+    quad([x-half,1.3805,z+.032],[x+half,1.3805,z+.032],[x+half,1.3805,z-.032],[x-half,1.3805,z-.032],
+      '#ffffff',uv(atlasX+1,atlasY+1,width*48-2,32))
   }
-  oval(.91,1.35,-.49,.115,.065,.17,'#d7d4bd')
-  oval(.91,1.411,-.536,.024,.018,.037,'#536360')
-  tube([1.78,1.30,-.91],[1.78,1.57,-.91],.13,.145,'#e0ba83')
-  tube([1.78,1.571,-.91],[1.78,1.576,-.91],.116,.116,'#58402e')
+  // Longitudinal sections widen at the buttons, narrow at the grip and
+  // rise into the palm rest. The lower lip sits flat on the desk mat.
+  function mouseSurface(t,a){
+    const z=-.49-.179*Math.cos(t)
+    const envelope=Math.max(0,Math.sin(t))**.66
+    const waist=1-.11*Math.exp(-((t-1.38)**2)/.10)
+    const x=.91+.116*envelope*waist*Math.sin(a)
+    const rise=.067+.032*Math.exp(-((t-1.95)**2)/.43)
+    return [x,1.326+rise*envelope*Math.max(0,Math.cos(a))**.78,z]
+  }
+  const mouseRows=32,mouseCols=24
+  const mouseMesh=Array.from({length:mouseRows+1},(_,i)=>
+    Array.from({length:mouseCols+1},(_,j)=>{
+      const t=Math.PI*i/mouseRows,a=Math.PI*(j/mouseCols-.5)
+      const across=sub(mouseSurface(t,a+.001),mouseSurface(t,a-.001))
+      const along=sub(mouseSurface(Math.min(Math.PI,t+.001),a),mouseSurface(Math.max(0,t-.001),a))
+      return {point:mouseSurface(t,a),normal:i===0?[0,0,-1]:i===mouseRows?[0,0,1]:unit(cross(along,across))}
+    }))
+  for(let i=0;i<mouseRows;i++){
+    for(let j=0;j<mouseCols;j++){
+      const a=mouseMesh[i][j],b=mouseMesh[i+1][j],c=mouseMesh[i+1][j+1],d=mouseMesh[i][j+1]
+      const color=i<15?'#dddccf':'#cbcbbd'
+      for(const face of [[a,b,c],[a,c,d]])tri(face.map(v=>v.point),color,face.map(v=>v.normal))
+    }
+    for(const j of [0,mouseCols]){
+      const a=mouseMesh[i][j].point,b=mouseMesh[i+1][j].point
+      quad(a,b,[b[0],1.307,b[2]],[a[0],1.307,a[2]],'#4d5552')
+    }
+  }
+  // Button gaps track the curved shell right up to its edges.
+  for(let i=0;i<15;i++)tube(mouseMesh[i][12].point,mouseMesh[i+1][12].point,.002,.002,charcoal)
+  for(let j=0;j<mouseCols;j++)tube(mouseMesh[15][j].point,mouseMesh[15][j+1].point,.0018,.0018,'#787c72')
+  const [wheelX,wheelY,wheelZ]=mouseSurface(1.09,0)
+  oval(wheelX,wheelY,wheelZ,.022,.009,.039,'#555c56')
+  oval(wheelX,wheelY+.006,wheelZ,.014,.021,.032,'#353d39')
+  for(let i=-2;i<=2;i++){
+    const z=i*.009
+    const y=wheelY+.006+.021*Math.sqrt(1-(z/.032)**2)
+    tube([wheelX-.005,y-.001,wheelZ+z],[wheelX+.005,y-.001,wheelZ+z],.0015,.0015,'#747a71')
+  }
+  const [cupX,liquidY,cupZ]=drinkSurface
+  const cupProfile=[[.112,1.30],[.130,1.315],[.145,1.561],[.143,1.57],
+    [.136,1.573],[.130,1.568],[.128,liquidY]]
+  for(let i=0;i<48;i++){
+    const ringPoint=(r,y,k)=>[cupX+r*Math.cos(k*TAU/48),y,cupZ+r*Math.sin(k*TAU/48)]
+    for(let j=1;j<cupProfile.length;j++){
+      const [r0,y0]=cupProfile[j-1],[r1,y1]=cupProfile[j]
+      quad(ringPoint(r0,y0,i),ringPoint(r1,y1,i),ringPoint(r1,y1,i+1),ringPoint(r0,y0,i+1),
+        j<3?'#e0ba83':'#f1d6ac')
+    }
+    tri([[cupX,liquidY,cupZ],ringPoint(.128,liquidY,i+1),ringPoint(.128,liquidY,i)],'#794932')
+  }
+  oval(cupX-.045,liquidY+.001,cupZ-.032,.035,.0008,.007,'#be8962')
   for(let i=0;i<12;i++){
     const pos=t=>[1.91+.12*Math.sin(t),1.44+.09*Math.cos(t),-.91]
     tube(pos(i*Math.PI/12),pos((i+1)*Math.PI/12),.027,.027,'#e0ba83')
