@@ -107,7 +107,7 @@ export function makeAtlas () {
   region(1060,1490,900,395,()=>{
     g.fillStyle='#f6e9cd';g.fillRect(0,0,900,395)
     g.fillStyle='#34554a';g.fillRect(0,0,16,395)
-    g.font='italic 132px Georgia,serif';g.fillText(profile.name+'.',54,144)
+    g.font='132px sans-serif';g.fillText(profile.name,58,148)
     g.font='50px sans-serif';g.fillText(profile.role,58,223)
     g.font='46px sans-serif';g.fillText('KLineChart 作者',58,286)
     g.font='36px monospace';g.fillText(profile.email,58,357)
