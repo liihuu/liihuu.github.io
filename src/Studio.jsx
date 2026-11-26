@@ -91,7 +91,12 @@ const fragmentSource = `
     float gloss=pow(max(dot(n,halfVector),0.),22.);
     float hardware=(1.-smoothstep(.20,.43,max(base.r,max(base.g,base.b))))*
       smoothstep(1.28,1.41,world.y);
-    shaded+=vec3(.14,.16,.16)*gloss*hardware*mix(1.,.42,night);
+    // Hair scatters the window light more broadly than the headphone shells.
+    if(texcoord.x < -1.5) {
+      shaded+=vec3(.040,.032,.028)*pow(max(dot(n,halfVector),0.),4.)*mix(1.,.4,night);
+    } else {
+      shaded+=vec3(.14,.16,.16)*gloss*hardware*mix(1.,.42,night);
+    }
     gl_FragColor=vec4(shaded,1.);
   }`
 
