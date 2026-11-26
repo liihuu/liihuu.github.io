@@ -21,6 +21,21 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
   background: transparent; transform-origin: 0 0; touch-action: none;
 }
 .object-hit:focus-visible { box-shadow: inset 0 0 0 2px #ffe2a5; background: #ffe8bc0c }
+.monitor-switch-hit {
+  display: grid; place-items: center; border: 1px solid #d9c39a; border-radius: 5px;
+  background: #514d4a; box-shadow: inset 0 1px 1px #ffffff38, 0 2px 4px #1f292655;
+  color: #f5d998; font-size: 13px; line-height: 1;
+}
+.monitor-switch-hit::after { content: '⏻'; transform: translateY(-.5px) }
+.monitor-switch-hit[aria-pressed="false"] { background: #302f30; color: #a67b6b; box-shadow: inset 0 2px 2px #10101066 }
+.mood-indicator {
+  position: absolute; z-index: 2; pointer-events: none; transform: translate(-50%, -100%);
+  padding: 4px 7px; border: 1px solid #f3d58e; border-radius: 999px;
+  background: #fff7dfeb; box-shadow: 0 5px 16px #293b3240; font-size: 22px;
+  transition: transform .2s ease, background .2s ease, border-color .2s ease;
+}
+.mood-indicator--angry { background: #ffe3dceb; border-color: #d47b6d; transform: translate(-50%, -100%) rotate(-7deg) }
+.mood-indicator--hidden { display: none }
 .theme-toggle, .view-controls {
   position: absolute; color: #f8f0dd; background: #293b32df;
   border: 1px solid #e6d4af52; box-shadow: 0 3px 15px #283b321c;

@@ -1,6 +1,6 @@
 // Sculpt the seated developer in room units. Head details share a local frame
 // so the hair and headphones all follow the gaze toward the chart.
-export function buildDeveloper({tri,oval,tube}) {
+export function buildDeveloper({tri,oval,tube,part=()=>{}}) {
   const px=-.68
   const tau=Math.PI*2
   const skin='#d69a77', cloth='#bc7356', denim='#465566'
@@ -161,6 +161,7 @@ export function buildDeveloper({tri,oval,tube}) {
   const nose=head([0,-.029,-.225])
   oval(...nose,.036,.053,.045,skin)
   line([[-.047,-.12,-.187],[0,-.125,-.196],[.044,-.117,-.187]],.005,'#a76d58')
+  part('developerArms')
   for(const side of [-1,1]){
     const ear=head([side*.216,-.028,.012])
     oval(...ear,.039,.071,.047,'#bf8469')

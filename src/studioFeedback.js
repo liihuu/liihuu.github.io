@@ -29,7 +29,7 @@ const notes={
   desk:[152,284,.075],shelf:[192,320,.075],book:[138,207,.055],
   drawer:[134,220,.10],lampSwitch:[730,1310,.035],key:[420,1280,.045],
   keyboard:[260,640,.05],mouse:[940,1750,.029],chair:[155,370,.085],
-  leaves:[370,530,.035],contact:[330,640,.04]
+  leaves:[370,530,.035],contact:[330,640,.04],monitorSwitch:[520,980,.045]
 }
 export function playContact(ctx,kind){
   const [low,high,length]=notes[kind]
@@ -64,6 +64,20 @@ export function movePart(mesh,part,base,value){
         mesh[k+3]=base[i+3]*cos+base[i+5]*sin
         mesh[k+5]=-base[i+3]*sin+base[i+5]*cos
         break
+      case 'developerArms': {
+        const side=x<-.68?-1:1
+        const pivotX=-.68+side*.284,pivotY=1.457,pivotZ=.623
+        const armAngle=value*1.02,armCos=Math.cos(armAngle),armSin=Math.sin(armAngle)
+        const dy=y-pivotY,dz=z-pivotZ
+        mesh[k]=x
+        mesh[k+1]=pivotY+dy*armCos-dz*armSin
+        mesh[k+2]=pivotZ+dy*armSin+dz*armCos
+        const ny=base[i+4],nz=base[i+5]
+        mesh[k+3]=base[i+3]
+        mesh[k+4]=ny*armCos-nz*armSin
+        mesh[k+5]=ny*armSin+nz*armCos
+        break
+      }
     }
   }
 }

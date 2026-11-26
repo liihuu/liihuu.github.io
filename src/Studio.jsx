@@ -9,7 +9,8 @@ import { applyTheme, getStoredTheme } from './themes'
 import { objects, profile } from './studioObjects'
 import qrcode from './assets/qrcode.png'
 
-const interactiveFaces=[['contact',objects.contact],['lampSwitch',{...lampSwitch,label:'台灯电源开关'}]]
+const monitorSwitch={label:'显示器电源开关',x:.05,y:1.35,z:-1.44,width:.22,height:.10}
+const interactiveFaces=[['contact',objects.contact],['lampSwitch',{...lampSwitch,label:'台灯电源开关'}],['monitorSwitch',monitorSwitch]]
 const HOME = { yaw: .48, pitch: .28 }
 const centre = [.05,1.85,-.46]
 const clamp = (v,min,max) => Math.min(max,Math.max(min,v))
@@ -42,6 +43,7 @@ const fragmentSource = `
   uniform sampler2D editor;
   uniform float night;
   uniform float lampPower;
+  uniform float screenPower;
   varying vec3 world;
   varying vec3 tint;
   varying vec3 surfaceNormal;
@@ -57,7 +59,7 @@ const fragmentSource = `
     }
     if(screen) {
       base=texture2D(editor,texcoord*vec2(2.,4.)).rgb;
-      gl_FragColor=vec4(base*(1.+.16*night),1.);
+      gl_FragColor=vec4(base*(1.+.16*night)*screenPower,1.);
       return;
     }
     // Trace sunlight back to the opening and its two wooden crossbars.
@@ -86,7 +88,7 @@ const fragmentSource = `
     vec3 moon=(world-vec3(-2.84,2.12,-.08))*vec3(.64,.66,.54);
     float moonlight=.65/(1.+dot(moon,moon));
     vec3 lamplight=base*(vec3(.19,.25,.38)+moonlight*vec3(.19,.29,.48)+
-      lampPower*(beam+.60*bounce)*vec3(1.25,.80,.34)+glow*vec3(.31,.57,.63));
+      lampPower*(beam+.60*bounce)*vec3(1.25,.80,.34)+glow*vec3(.31,.57,.63)*screenPower);
     bool bulb=length(radial)<${diffuserRadius} && abs(axial)<.002;
     if(bulb) lamplight=mix(base*.42,vec3(1.,.91,.63),lampPower);
     if(bulb) daylight=mix(base*.65,vec3(1.,.94,.76),lampPower);
@@ -147,10 +149,10 @@ function gpuRenderer (canvas, vertices, atlas) {
   gl.uniform1i(gl.getUniformLocation(program,'editor'),2)
   gl.activeTexture(gl.TEXTURE1)
   gl.enable(gl.DEPTH_TEST)
-  const uniforms=Object.fromEntries(['camera','scale','time','night','lampPower'].map(k=>[k,gl.getUniformLocation(program,k)]))
+  const uniforms=Object.fromEntries(['camera','scale','time','night','lampPower','screenPower'].map(k=>[k,gl.getUniformLocation(program,k)]))
   return {
     update(start,data){gl.bufferSubData(gl.ARRAY_BUFFER,start*4,data)},
-    draw (matrix,sx,sy,time,night,editor,lampPower) {
+    draw (matrix,sx,sy,time,night,editor,lampPower,screenPower) {
       if(editor){
         gl.activeTexture(gl.TEXTURE2)
         gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,editor)
@@ -161,6 +163,7 @@ function gpuRenderer (canvas, vertices, atlas) {
       gl.uniformMatrix3fv(uniforms.camera,false,matrix)
       gl.uniform2f(uniforms.scale,sx,sy);gl.uniform1f(uniforms.time,time);gl.uniform1f(uniforms.night,night)
       gl.uniform1f(uniforms.lampPower,lampPower)
+      gl.uniform1f(uniforms.screenPower,screenPower)
       gl.drawArrays(gl.TRIANGLES,0,vertices.length/12)
     },
     dispose () { gl.deleteBuffer(buffer);gl.deleteTexture(texture);gl.deleteTexture(skyTexture);gl.deleteTexture(editorTexture);gl.deleteProgram(program) }
@@ -174,7 +177,7 @@ function softwareRenderer (canvas, vertices, atlas) {
   const pixels=atlas.getContext('2d').getImageData(0,0,atlas.width,atlas.height).data
   const sky=createWindowSky()
   let editorPixels,skyPixels
-  return function draw(matrix,sx,sy,time,night,editor,lampPower) {
+  return function draw(matrix,sx,sy,time,night,editor,lampPower,screenPower) {
     if(editor)editorPixels=editor.getContext('2d').getImageData(0,0,1024,440).data
     if(sky.paint(night))skyPixels=sky.canvas.getContext('2d').getImageData(0,0,sky.canvas.width,sky.canvas.height).data
     const w=canvas.width,h=canvas.height
@@ -232,7 +235,7 @@ function softwareRenderer (canvas, vertices, atlas) {
           const spread=.19+.78*Math.max(axial,0)
           const beam=Math.exp(-radialSq/(spread*spread))*clamp(1+axial/.13,0,1)/(1+.48*axial*axial)
           const warm=lampPower*(beam+.6/(1+2.7*(lx*lx+ly*ly+lz*lz)))
-          const cool=1/(1+1.4*((.69*(wx-.05))**2+(.94*(wy-2.12))**2+(.72*(wz+1.25))**2))
+          const cool=screenPower/(1+1.4*((.69*(wx-.05))**2+(.94*(wy-2.12))**2+(.72*(wz+1.25))**2))
           const moon=.65/(1+(.64*(wx+2.84))**2+(.66*(wy-2.12))**2+(.54*(wz+.08))**2)
           r+=(.19+.19*moon+1.25*warm+.31*cool-r)*night
           g+=(.25+.29*moon+.80*warm+.57*cool-g)*night
@@ -248,6 +251,7 @@ function softwareRenderer (canvas, vertices, atlas) {
             continue
           }
         }
+        if(vertices[i+9]>=0 && vertices[i+9]<.51 && vertices[i+10]<.22){r*=screenPower;g*=screenPower;b*=screenPower}
         image.data[k*4]=source[offset]*r
         image.data[k*4+1]=source[offset+1]*g
         image.data[k*4+2]=source[offset+2]*b
@@ -335,6 +339,7 @@ function createSteamPainter(canvas){
 export default function Studio () {
   const ref=useRef(null), fallback=useRef(null), dialog=useRef(null)
   const steam=useRef(null)
+  const mood=useRef(null)
   const hitAreas=useRef({}), resetView=useRef(null)
   const activateObject=useRef(null)
   const [theme,setTheme]=useState(getStoredTheme)
@@ -357,6 +362,7 @@ export default function Studio () {
     editorContext.drawImage(atlas,0,0,1024,440,0,0,1024,440)
     const paintSteam=createSteamPainter(steam.current)
     const typingStart=performance.now()
+    let typingPause=0,typingPausedAt=0
     let previousCount=-1,previousStage=-1
     let night=getStoredTheme()==='dark'?1:0
     let startNight=night,targetNight=night,started=0
@@ -366,7 +372,7 @@ export default function Studio () {
     let {yaw,pitch}=HOME
     let drag,frame=0,visible=true,lastDraw=-100,dirty=true
     const motion=window.matchMedia('(prefers-reduced-motion: reduce)')
-    let view,audio,lampPower=1
+    let view,audio,lampPower=1,screenPower=1
     const active=new Map(),drawers=new Map()
     function activate(part){
       if(!part || part.kind==='project' || part.kind==='lamp')return
@@ -383,6 +389,18 @@ export default function Studio () {
         lampPower=1-lampPower
         hitAreas.current.lampSwitch.setAttribute('aria-pressed',String(Boolean(lampPower)))
       }
+      if(kind==='monitorSwitch'){
+        screenPower=1-screenPower
+        hitAreas.current.monitorSwitch.setAttribute('aria-pressed',String(Boolean(screenPower)))
+        if(screenPower) {
+          if(typingPausedAt) typingPause+=performance.now()-typingPausedAt
+          typingPausedAt=0
+        } else typingPausedAt=performance.now()
+        mood.current?.classList.toggle('mood-indicator--angry',!screenPower)
+        mood.current?.classList.toggle('mood-indicator--hidden',Boolean(screenPower))
+        if(mood.current)mood.current.textContent=screenPower?'':'😠'
+        mood.current?.setAttribute('aria-label',screenPower?'人物现在很开心，显示器已打开':'人物现在很生气，显示器已关闭')
+      }
       if(kind==='pot')part=parts.find(p=>p.kind==='leaves')
       if(['key','mouse','lampSwitch','drawer','leaves','cup','chair','book'].includes(part.kind)){
         const prior=active.get(part)
@@ -394,7 +412,7 @@ export default function Studio () {
       }
       refresh()
     }
-    activateObject.current=key=>activate(parts.find(part=>part.kind===key))
+    activateObject.current=key=>activate(key==='monitorSwitch'?{kind:key}:parts.find(part=>part.kind===key))
     function draw(now) {
       frame=0
       if(!visible || document.hidden)return
@@ -418,6 +436,9 @@ export default function Studio () {
           plume.height=160*puffScale*c+'px'
           plume.left=w/(2*ratio)+unit*(a*mx-b*mz)-48*puffScale+'px'
           plume.top=h/(2*ratio)-unit*(-b*d*mx+c*my-a*d*mz)-144*puffScale*c+'px'
+          const headX=-.651-centre[0],headY=1.874-centre[1],headZ=.456-centre[2]
+          mood.current.style.left=w/(2*ratio)+unit*(a*headX-b*headZ)+'px'
+          mood.current.style.top=h/(2*ratio)-unit*(-b*d*headX+c*headY-a*d*headZ)-unit*.34+'px'
           for(const [key,obj] of interactiveFaces){
             const rake=obj.rake || 0
             const node=hitAreas.current[key]
@@ -433,7 +454,8 @@ export default function Studio () {
         const duration=1600*Math.abs(targetNight-startNight)
         const t=duration && !motion.matches ? clamp((now-started)/duration,0,1) : 1
         night=t===1 ? targetNight : startNight+(targetNight-startNight)*t
-        const count=motion.matches?Infinity:typedCharacters(now-typingStart)
+        const pausedNow=typingPausedAt?now-typingPausedAt:0
+        const count=motion.matches?Infinity:typedCharacters(now-typingStart-typingPause-pausedNow)
         const stage=chartStage(count)
         const chartChanged=stage!==previousStage || stage<3
         const codeChanged=count!==previousCount
@@ -460,9 +482,9 @@ export default function Studio () {
           gpu?.update(part.start,model.subarray(part.start,part.end))
           if(progress===1)active.delete(part)
         }
-        const time=motion.matches?0:now/1000
+        const time=motion.matches || !screenPower ? 0 : now/1000
         view={matrix,centre,unit:size/ratio,width:w/ratio,height:h/ratio,time:gpu?time:0}
-        render(matrix,2*size/w,2*size/h,time,night,changed?editor:null,lampPower)
+        render(matrix,2*size/w,2*size/h,time,night,changed?editor:null,lampPower,screenPower)
         paintSteam(motion.matches?0:now/1000)
         lastDraw=now;dirty=false
       }
@@ -490,6 +512,13 @@ export default function Studio () {
     function preventDragClick(e){
       if(dragged && e.detail){e.preventDefault();e.stopPropagation()}
       else if(e.detail && view && (e.target===canvas || e.target.closest('.object-hit'))){
+        const hit=e.target.closest('.object-hit')
+        if(hit?.dataset.objectKey==='monitorSwitch'){
+          e.stopPropagation()
+          activateObject.current?.('monitorSwitch')
+          dragged=false
+          return
+        }
         const bounds=canvas.getBoundingClientRect()
         const part=pickPart(model,parts,view,e.clientX-bounds.left,e.clientY-bounds.top)
         e.stopPropagation()
@@ -531,8 +560,9 @@ export default function Studio () {
     <canvas className="room-canvas" ref={ref} tabIndex="0" aria-label="程序员正在房间里敲代码。拖动或用方向键转动视角，Home 键复位。" />
     <canvas ref={steam} width="64" height="96" aria-hidden="true"
       style={{position:'absolute',pointerEvents:'none'}} />
+    <div ref={mood} className="mood-indicator mood-indicator--hidden" aria-label="人物状态正常" aria-live="polite" />
     {interactiveFaces.map(([key,obj])=>
-      <button key={key} className="object-hit" aria-label={obj.label} aria-pressed={key==='lampSwitch'?true:undefined} aria-haspopup={key==='contact'?'dialog':undefined}
+      <button key={key} data-object-key={key} className={'object-hit'+(key==='monitorSwitch'?' monitor-switch-hit':'')} aria-label={obj.label} aria-pressed={key==='lampSwitch'||key==='monitorSwitch'?true:undefined} aria-haspopup={key==='contact'?'dialog':undefined}
         ref={el=>{hitAreas.current[key]=el}} onClick={()=>activateObject.current?.(key)} />
     )}
     <ThemeSwitcher theme={theme} onChange={switchScene} />

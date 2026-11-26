@@ -322,7 +322,7 @@ export function studioModel (parts=[]) {
     tube([px+side*.36,.75,pz],[px+side*.41,1.03,pz+.02],.034,.032,charcoal)
     shell(px+side*.41,pz-.045,[[1.025,.091,.33,.039],[1.058,.109,.35,.042],[1.07,.091,.33,.039]],'#434650')
   }
-  buildDeveloper({tri,oval,tube,shell})
+  buildDeveloper({tri,oval,tube,shell,part})
   parts[parts.length-1].end=vertices.length
   return new Float32Array(vertices)
 }
