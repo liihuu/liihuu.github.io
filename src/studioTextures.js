@@ -1,54 +1,222 @@
 import { lampBase } from './taskLamp'
 import { profile } from './studioObjects'
 
-export function drawScreen (g) {
-  g.fillStyle = '#14252c'
-  g.fillRect(0,0,1024,440)
-  g.fillStyle = '#243943'
-  g.fillRect(0,0,1024,48)
-  for (const [i,color] of ['#ef9a83','#e3c584','#88c5ab'].entries()) {
+const setup=`import { init } from 'klinecharts'
+import candles from './candles.json'
+
+const host = document.getElementById(
+  'chart'
+)
+const ticker = host?.dataset.ticker
+if (!ticker) throw Error('Missing ticker')
+
+const chart = init('chart')
+if (!chart) throw Error('Missing chart')`
+
+const chartSteps=[
+  `chart.setSymbol({
+  ticker,
+  pricePrecision: 2,
+  volumePrecision: 3
+})`,
+  `chart.setPeriod({
+  type: 'minute', span: 15
+})`,
+  `chart.setDataLoader({
+  getBars: ({ callback }) => {
+    callback(candles, false)
+  }
+})`,
+  `chart.createIndicator({
+  name: 'MA', calcParams: [5],
+  paneId: 'candle_pane'
+}, true)`,
+  "chart.createIndicator('VOL')"
+]
+const editorSource=[setup,...chartSteps].join('\n\n')
+const completedAt=chartSteps.map(step=>editorSource.indexOf(step)+step.length)
+export function chartStage(count){
+  return completedAt.filter(end=>count>=end).length
+}
+const firstTypedCharacter=editorSource.indexOf('chart.setSymbol')
+const keyTimes=[]
+let elapsed=0
+for(const character of editorSource.slice(firstTypedCharacter)){
+  elapsed+=character==='\n'?290:character===' '?55:75
+  keyTimes.push(elapsed)
+}
+
+export function typedCharacters(time){
+  const phase=time%(elapsed+2300)
+  const next=keyTimes.findIndex(end=>phase<end)
+  return next<0?editorSource.length:firstTypedCharacter+next
+}
+
+function screenBrush(g){
+  const rect=(x,y,w,h,color)=>{
     g.fillStyle=color
-    g.beginPath(); g.arc(18+19*i,24,5,0,2*Math.PI); g.fill()
+    g.fillRect(x,y,w,h)
   }
-  g.font='bold 20px monospace'
-  g.fillStyle='#c0d5cd'
-  g.fillText('chart.ts',88,32)
-  g.fillText('KLineChart',550,32)
-  g.fillText('↗',990,32)
-  const lines=[
-    ['import ', '{ init }', " from 'klinecharts'"],
-    ['const ', 'chart', " = init('app')"],
-    [], ['const ', 'data', ' = ['],
-    ['  { ', 'open: ', '128,'],
-    ['    ', 'high: ', '142,'],
-    ['    ', 'low:  ', '122,'],
-    ['    ', 'close:', ' 138 }'],
-    [']'], ['chart.', 'applyNewData', '(data)']
-  ]
-  g.font='19px monospace'
-  lines.forEach((parts,i)=>{
-    const y=85+i*33
-    g.fillStyle='#73918e';g.fillText(String(i+1).padStart(2,'0'),12,y)
-    let x=53
-    parts.forEach((part,k)=>{
-      g.fillStyle=['#d8a2ab','#93d7c1','#dfc091'][k]
-      g.fillText(part,x,y);x+=g.measureText(part).width
-    })
+  const label=(value,x,y,size,color,mono=false)=>{
+    g.font=size+'px '+(mono?'Menlo, Consolas, monospace':'-apple-system, BlinkMacSystemFont, sans-serif')
+    g.fillStyle=color
+    g.fillText(value,x,y)
+  }
+  return {rect,label}
+}
+
+export function drawEditorCode(g,count){
+  const {rect,label}=screenBrush(g)
+  const lines=editorSource.slice(0,count).split('\n')
+  const active=lines.length-1
+  const firstVisible=Math.max(0,lines.length-15)
+  rect(128,85,337,329,'#1e1e1e')
+  rect(128,102+(active-firstVisible)*21-14,337,21,'#282828')
+  lines.slice(firstVisible).forEach((line,row)=>{
+    const i=firstVisible+row
+    const y=102+row*21
+    if(line.startsWith('  '))rect(158,y-13,1,21,'#404040')
+    label(String(i+1).padStart(2),132,y,11,i===active?'#eeeeee':'#858585',true)
+    let x=158
+    for(const token of line.match(/'[^']*'?|\w+|[^\w']/g)||[]){
+      const color=token.startsWith("'")?'#ce9178':/^(import|from|const|if|throw|true|false)$/.test(token)?'#c586c0':
+        /^(init|Error|setSymbol|setPeriod|setDataLoader|callback|createIndicator)$/.test(token)?'#dcdcaa':
+        /^\d+$/.test(token)?'#b5cea8':'#9cdcfe'
+      label(token,x,y,12.5,color,true)
+      x+=g.measureText(token).width
+    }
+    if(i===active)rect(x+1,y-11,1,14,'#eeeeee')
   })
-  g.fillStyle='#27414a';g.fillRect(524,48,2,392)
-  for(let i=0;i<7;i++)g.fillRect(545,83+i*47,456,1)
-  for(let i=0;i<10;i++)g.fillRect(551+i*48,66,1,340)
-  let last=286
-  for(let i=0;i<27;i++){
-    const close=284-i*6+Math.sin(i*.64)*31+Math.cos(i*1.86)*17
-    const x=552+i*16.8
-    g.fillStyle=close<last?'#78d4b3':'#ec927e'
-    g.fillRect(x+4,Math.min(last,close)-10,2,Math.abs(last-close)+21)
-    g.fillRect(x,Math.min(last,close),10,Math.max(4,Math.abs(last-close)))
-    const h=8+Math.abs(close-last)*.78
-    g.globalAlpha=.65;g.fillRect(x,400-h,10,h);g.globalAlpha=1
-    last=close
+
+  rect(190,418,275,22,'#007acc')
+  label('Ln '+lines.length+', Col '+(lines[active].length+1)+'    UTF-8    TypeScript',208,433,11,'#ffffff',true)
+}
+
+export function drawScreen (g) {
+  g.save()
+  const {rect,label}=screenBrush(g)
+  rect(0,0,1024,440,'#20252e')
+  rect(0,0,1024,30,'#333943')
+  for(const [i,color] of ['#f07872','#ecc16c','#89bd8c'].entries()){
+    g.fillStyle=color
+    g.beginPath();g.arc(15+15*i,15,4,0,2*Math.PI);g.fill()
   }
+  g.textAlign='center'
+  label('KLineChart',512,20,13,'#d7dce1')
+  g.textAlign='left'
+  // The left split uses the compact layout of VS Code's Dark+ theme.
+  rect(0,31,465,387,'#1e1e1e')
+  rect(0,31,29,387,'#333333')
+  rect(29,31,98,387,'#252526')
+  rect(0,33,2,29,'#ffffff')
+  function activityIcon(y,path,color){
+    g.save()
+    g.translate(5,y)
+    g.strokeStyle=color
+    g.lineWidth=1.4
+    g.lineJoin='round'
+    g.stroke(new Path2D(path))
+    g.restore()
+  }
+  activityIcon(39,'M3 1 H11 L15 5 V16 H3 Z M11 1 V5 H15 M6 18 H18 V7','#ffffff')
+  activityIcon(76,'M14 7 A6 6 0 1 1 2 7 A6 6 0 1 1 14 7 M12 12 L18 18','#b0b0b0')
+  activityIcon(114,'M5 5 V15 M5 12 Q14 12 14 6 M7 3 A2 2 0 1 1 3 3 A2 2 0 1 1 7 3 M7 17 A2 2 0 1 1 3 17 A2 2 0 1 1 7 17 M16 4 A2 2 0 1 1 12 4 A2 2 0 1 1 16 4','#b0b0b0')
+  activityIcon(151,'M2 2 H8 V8 H2 Z M2 11 H8 V17 H2 Z M11 11 H17 V17 H11 Z M10 4 L14 0 L18 4 L14 8 Z','#b0b0b0')
+  label('EXPLORER',36,50,10,'#c4c4c4')
+  label('⌄  WORKSPACE',34,75,10,'#dedede')
+  label('⌄  src',41,96,12,'#d0d0d0')
+  rect(29,103,98,20,'#37373d')
+  label('TS',44,117,10,'#55b6ed',true)
+  label('chart.ts',63,117,12,'#eeeeee')
+  label('{}',44,138,11,'#d5b968',true)
+  label('candles.json',62,138,11,'#cccccc')
+  label('◇',38,159,12,'#db975c')
+  label('index.html',53,159,12,'#cccccc')
+  rect(128,31,337,28,'#252526')
+  rect(128,31,107,28,'#1e1e1e')
+  rect(128,31,107,2,'#3794ff')
+  label('TS',139,50,12,'#55b6ed',true)
+  label('chart.ts',161,50,13,'#eeeeee')
+  label('×',219,50,14,'#bbbbbb')
+  label('src  ›  chart.ts',139,77,11,'#b2b2b2')
+  drawChartPreview(g,chartSteps.length)
+  rect(0,418,1024,22,'#303b48')
+  rect(0,418,465,22,'#007acc')
+  label('⑂ main',10,433,12,'#ffffff',true)
+  drawEditorCode(g,editorSource.length)
+  g.restore()
+}
+
+export function drawChartPreview(g,stage,time=0){
+  const {rect,label}=screenBrush(g)
+  const up='#168476',down='#be5558',ink='#283742',muted='#596a77'
+  rect(465,31,559,387,'#eef2f3')
+  rect(465,31,559,31,'#dbe3e6')
+  label('图表预览',481,52,13,muted)
+  if(stage>=2)label('15 分钟 K 线',481,86,17,ink)
+  if(stage<3){
+    const angle=time*Math.PI*2/1000
+    g.save()
+    g.lineWidth=3
+    g.lineCap='round'
+    g.strokeStyle='#cbd6d9'
+    g.beginPath()
+    g.arc(744.5,240,12,0,Math.PI*2)
+    g.stroke()
+    g.strokeStyle=up
+    g.beginPath()
+    g.arc(744.5,240,12,angle,angle+Math.PI*.75)
+    g.stroke()
+    g.restore()
+    return
+  }
+  // A repeatable demo session, with OHLC, average and volume sharing the same bars.
+  let seed=7919
+  const random=()=>((seed=(1664525*seed+1013904223)>>>0)/4294967296)
+  const bars=[]
+  let price=186.34
+  for(let i=0;i<60;i++){
+    const open=price
+    price=open+.12+.35*Math.sin(i*.22)+(random()-.49)*1.65
+    bars.push({open,close:price,high:Math.max(open,price)+.14+.75*random(),
+      low:Math.min(open,price)-.12-.68*random(),volume:10+random()*16+Math.abs(price-open)*19})
+  }
+  const left=481,right=961,top=112,bottom=stage===5?311:380,step=(right-left)/bars.length
+  const low=Math.floor(Math.min(...bars.map(b=>b.low))/2)*2
+  const high=Math.ceil(Math.max(...bars.map(b=>b.high))/2)*2
+  const py=value=>bottom-(value-low)/(high-low)*(bottom-top)
+  const px=i=>left+(i+.5)*step
+  const last=bars.at(-1)
+  label(['O','H','L','C'].map((key,i)=>key+' '+[last.open,last.high,last.low,last.close][i].toFixed(2)).join('   '),481,105,11,muted,true)
+  for(let i=0;i<=4;i++){
+    const value=low+(high-low)*i/4
+    rect(left,py(value),right-left,1,'#d3dbdf')
+    label(value.toFixed(2),967,py(value)+4,11,muted,true)
+  }
+  for(let i=0;i<bars.length;i+=12){
+    rect(px(i),top,1,273,'#dae1e4')
+    label(String(8+i/4).padStart(2,'0')+':00',Math.max(left,px(i)-15),405,11,muted,true)
+  }
+  const maxVolume=Math.max(...bars.map(b=>b.volume))
+  bars.forEach((bar,i)=>{
+    const color=bar.close>=bar.open?up:down
+    rect(px(i)-.7,py(bar.high),1.4,py(bar.low)-py(bar.high),color)
+    rect(px(i)-2.6,py(Math.max(bar.open,bar.close)),5.2,Math.max(1.5,Math.abs(py(bar.open)-py(bar.close))),color)
+    const height=bar.volume/maxVolume*40
+    if(stage===5)rect(px(i)-2.6,385-height,5.2,height,color)
+  })
+  if(stage<4)return
+  g.beginPath()
+  for(let i=4;i<bars.length;i++){
+    const average=bars.slice(i-4,i+1).reduce((sum,b)=>sum+b.close,0)/5
+    if(i===4)g.moveTo(px(i),py(average))
+    else g.lineTo(px(i),py(average))
+  }
+  g.strokeStyle='#bb8439';g.lineWidth=1.6;g.stroke()
+  label('MA 5',right-37,86,11,'#986723',true)
+  if(stage<5)return
+  rect(468,322,556,1,'#ccd5d9')
+  label('VOL',left,339,11,muted,true)
 }
 
 function ease(from,to,value) {

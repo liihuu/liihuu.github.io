@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { diffuserRadius, lampAxis, lampLight } from './taskLamp'
 import { studioModel } from './studioModel'
-import { createWindowSky, drawScreen, makeAtlas } from './studioTextures'
+import { createWindowSky, chartStage, drawChartPreview, drawEditorCode, drawScreen, makeAtlas, typedCharacters } from './studioTextures'
 
 import ThemeSwitcher from './ThemeSwitcher'
 import { applyTheme, getStoredTheme } from './themes'
@@ -37,6 +37,7 @@ const fragmentSource = `
   precision mediump float;
   uniform sampler2D atlas;
   uniform sampler2D sky;
+  uniform sampler2D editor;
   uniform float night;
   varying vec3 world;
   varying vec3 tint;
@@ -52,6 +53,7 @@ const fragmentSource = `
       return;
     }
     if(screen) {
+      base=texture2D(editor,texcoord*vec2(2.,4.)).rgb;
       gl_FragColor=vec4(base*(1.+.16*night),1.);
       return;
     }
@@ -133,17 +135,29 @@ function gpuRenderer (canvas, vertices, atlas) {
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE)
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE)
   gl.uniform1i(gl.getUniformLocation(program,'sky'),1)
+  const editorTexture=gl.createTexture()
+  gl.activeTexture(gl.TEXTURE2)
+  gl.bindTexture(gl.TEXTURE_2D,editorTexture)
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1024,512,0,gl.RGBA,gl.UNSIGNED_BYTE,null)
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR)
+  gl.uniform1i(gl.getUniformLocation(program,'editor'),2)
+  gl.activeTexture(gl.TEXTURE1)
   gl.enable(gl.DEPTH_TEST)
   const uniforms=Object.fromEntries(['camera','scale','time','night'].map(k=>[k,gl.getUniformLocation(program,k)]))
   return {
-    draw (matrix,sx,sy,time,night) {
+    draw (matrix,sx,sy,time,night,editor) {
+      if(editor){
+        gl.activeTexture(gl.TEXTURE2)
+        gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,editor)
+        gl.activeTexture(gl.TEXTURE1)
+      }
       if(windowSky.paint(night))gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,windowSky.canvas)
       gl.viewport(0,0,canvas.width,canvas.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT)
       gl.uniformMatrix3fv(uniforms.camera,false,matrix)
       gl.uniform2f(uniforms.scale,sx,sy);gl.uniform1f(uniforms.time,time);gl.uniform1f(uniforms.night,night)
       gl.drawArrays(gl.TRIANGLES,0,vertices.length/12)
     },
-    dispose () { gl.deleteBuffer(buffer);gl.deleteTexture(texture);gl.deleteTexture(skyTexture);gl.deleteProgram(program) }
+    dispose () { gl.deleteBuffer(buffer);gl.deleteTexture(texture);gl.deleteTexture(skyTexture);gl.deleteTexture(editorTexture);gl.deleteProgram(program) }
   }
 }
 
@@ -153,8 +167,9 @@ function softwareRenderer (canvas, vertices, atlas) {
   const ctx=canvas.getContext('2d')
   const pixels=atlas.getContext('2d').getImageData(0,0,atlas.width,atlas.height).data
   const sky=createWindowSky()
-  let skyPixels
-  return function draw(matrix,sx,sy,time,night) {
+  let editorPixels,skyPixels
+  return function draw(matrix,sx,sy,time,night,editor) {
+    if(editor)editorPixels=editor.getContext('2d').getImageData(0,0,1024,440).data
     if(sky.paint(night))skyPixels=sky.canvas.getContext('2d').getImageData(0,0,sky.canvas.width,sky.canvas.height).data
     const w=canvas.width,h=canvas.height
     const image=ctx.createImageData(w,h), depth=new Float32Array(w*h).fill(-Infinity)
@@ -185,6 +200,8 @@ function softwareRenderer (canvas, vertices, atlas) {
             tx=clamp(Math.floor((tx-1080)/940*sky.canvas.width),0,sky.canvas.width-1)
             ty=clamp(Math.floor(ty/640*sky.canvas.height),0,sky.canvas.height-1)
             source=skyPixels;offset=4*(ty*sky.canvas.width+tx)
+          }else if(tx<1024 && ty<440){
+            source=editorPixels;offset=4*(ty*1024+tx)
           }else{
             source=pixels;offset=4*(ty*atlas.width+tx)
           }
@@ -230,7 +247,7 @@ export default function Studio () {
   const hitAreas=useRef({}), resetView=useRef(null)
   const [panel,setPanel]=useState(null)
   const [theme,setTheme]=useState(getStoredTheme)
-  const changeLighting=useRef(null)
+  const changeLighting=useRef(null),editorImage=useRef(null)
   function switchScene(next){
     applyTheme(next)
     setTheme(next)
@@ -246,6 +263,13 @@ export default function Studio () {
     const target=gpu?canvas:fallback.current
     const render=gpu?gpu.draw:softwareRenderer(target,model,atlas)
 
+    const editor=document.createElement('canvas')
+    editor.width=1024;editor.height=512
+    const editorContext=editor.getContext('2d',{willReadFrequently:!gpu})
+    editorContext.drawImage(atlas,0,0,1024,440,0,0,1024,440)
+    editorImage.current=editor
+    const typingStart=performance.now()
+    let previousCount=-1,previousStage=-1
     let night=getStoredTheme()==='dark'?1:0
     let startNight=night,targetNight=night,started=0
     changeLighting.current=next=>{
@@ -257,7 +281,7 @@ export default function Studio () {
     function draw(now) {
       frame=0
       if(!visible || document.hidden)return
-      if(dirty || now-lastDraw>=40){
+      if(dirty || now-lastDraw>=(gpu?40:220)){
         const ratio=gpu?Math.min(devicePixelRatio,1.75):Math.min(1,1080/canvas.clientWidth)
         const w=Math.round(canvas.clientWidth*ratio),h=Math.round(canvas.clientHeight*ratio)
         if(!w||!h)return
@@ -284,10 +308,20 @@ export default function Studio () {
         const duration=1600*Math.abs(targetNight-startNight)
         const t=duration && !motion.matches ? clamp((now-started)/duration,0,1) : 1
         night=t===1 ? targetNight : startNight+(targetNight-startNight)*t
-        render(matrix,2*size/w,2*size/h,motion.matches?0:now/1000,night)
+        const count=motion.matches?Infinity:typedCharacters(now-typingStart)
+        const stage=chartStage(count)
+        const chartChanged=stage!==previousStage || stage<3
+        const codeChanged=count!==previousCount
+        if(chartChanged)drawChartPreview(editorContext,stage,now-typingStart)
+        if(codeChanged)drawEditorCode(editorContext,count)
+        const changed=chartChanged || codeChanged
+        if(changed)detail.current?.getContext('2d').drawImage(editor,0,0,1024,440,0,0,1024,440)
+        previousStage=stage
+        previousCount=count
+        render(matrix,2*size/w,2*size/h,motion.matches?0:now/1000,night,changed?editor:null)
         lastDraw=now;dirty=false
       }
-      if(!motion.matches && (gpu || night!==targetNight))frame=requestAnimationFrame(draw)
+      if(!motion.matches)frame=requestAnimationFrame(draw)
     }
     function refresh(){dirty=true;if(!frame)frame=requestAnimationFrame(draw)}
     resetView.current=()=>{yaw=HOME.yaw;pitch=HOME.pitch;refresh()}
@@ -339,7 +373,11 @@ export default function Studio () {
     }
   },[])
   useEffect(()=>{
-    if(panel==='project')drawScreen(detail.current.getContext('2d'))
+    if(panel==='project'){
+      const ctx=detail.current.getContext('2d')
+      drawScreen(ctx)
+      if(editorImage.current)ctx.drawImage(editorImage.current,0,0,1024,440,0,0,1024,440)
+    }
   },[panel])
   return <main className="studio-room" aria-label="liihuu 的三维工作室">
     <h1 className="sr-only">liihuu · 前端开发工程师 · KLineChart 作者</h1>
