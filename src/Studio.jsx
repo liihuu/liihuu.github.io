@@ -419,13 +419,14 @@ export default function Studio () {
           plume.left=w/(2*ratio)+unit*(a*mx-b*mz)-48*puffScale+'px'
           plume.top=h/(2*ratio)-unit*(-b*d*mx+c*my-a*d*mz)-144*puffScale*c+'px'
           for(const [key,obj] of interactiveFaces){
+            const rake=obj.rake || 0
             const node=hitAreas.current[key]
-            const x=obj.x-obj.width/2-centre[0], y=obj.y+obj.height/2-centre[1], z=obj.z-centre[2]
+            const x=obj.x-obj.width/2-centre[0], y=obj.y+obj.height/2-centre[1], z=obj.z-obj.height*rake/2-centre[2]
             const left=w/(2*ratio)+unit*(a*x-b*z)
             const top=h/(2*ratio)-unit*(-b*d*x+c*y-a*d*z)
             node.style.width=obj.width*unit+'px'
             node.style.height=obj.height*unit+'px'
-            node.style.transform='matrix('+[a,b*d,0,c,left,top].join(',')+')'
+            node.style.transform='matrix('+[a,b*d,-b*rake,c+a*d*rake,left,top].join(',')+')'
           }
         }
         // A reversal traverses only the remaining part of the same sky path.

@@ -361,13 +361,15 @@ export function makeAtlas () {
     g.fillText(label,atlasX+5,atlasY+23,w-10)
   }
   region(1060,1490,900,395,()=>{
-    g.fillStyle='#f6e9cd';g.fillRect(0,0,900,395)
-    g.fillStyle='#34554a';g.fillRect(0,0,16,395)
-    g.font='132px sans-serif';g.fillText(profile.name,58,148)
-    g.font='50px sans-serif';g.fillText(profile.role,58,223)
-    g.font='46px sans-serif';g.fillText('KLineChart 作者',58,286)
-    g.font='36px monospace';g.fillText(profile.email,58,357)
-    g.font='60px sans-serif';g.fillText('↗',793,88)
+    const finish=g.createLinearGradient(0,0,0,395)
+    finish.addColorStop(0,'#53515b');finish.addColorStop(1,'#3e3b44')
+    g.fillStyle=finish;g.fillRect(0,0,900,395)
+    g.fillStyle='#f3ecdc'
+    g.font='132px sans-serif';g.fillText(profile.name,46,132)
+    g.font='50px sans-serif';g.fillText(profile.role,50,210)
+    g.font='46px sans-serif';g.fillText('KLineChart 作者',50,269)
+    g.fillStyle='#dedaca'
+    g.font='36px monospace';g.fillText(profile.email,50,349)
   })
   return atlas
 }

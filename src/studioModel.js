@@ -87,16 +87,16 @@ export function studioModel (parts=[]) {
     }
   }
   const uv = (x,y,w,h) => [[x,y+h],[x+w,y+h],[x+w,y],[x,y]].map(p=>p.map(n=>n/2048))
-  const wood='#bb8157', edge='#98613f', teal='#48766b', charcoal='#313d43', cream='#f0dbc1'
+  const wood='#bb8157', edge='#98613f', baseboard='#b3a997', charcoal='#313d43', cream='#f0dbc1'
   // Continue the floor and walls past the camera so the viewport is inside the room.
   for (let ix=0; ix<4; ix++) for (let iz=0; iz<4; iz++) {
     const x=-3+6*ix, z=-2.25+4.5*iz
     quad([x,.03,z+4.5],[x+6,.03,z+4.5],[x+6,.03,z],[x,.03,z],'#ffffff',uv(0,700,1000,760))
   }
-  box(8.9,6,-2.28,24,12,.13,'#a7b9a5')
+  box(8.9,6,-2.28,24,12,.13,'#c9c5b9')
   box(-3.04,6,9,.13,12,23,'#dfcaac')
-  box(8.9,.15,-2.18,24,.22,.10,teal)
-  box(-2.94,.15,9,.10,.22,23,teal)
+  box(8.9,.15,-2.18,24,.22,.10,baseboard)
+  box(-2.94,.15,9,.10,.22,23,baseboard)
 
   function surface(key, texture) {
     const {x,y,z,width,height}=objects[key]
@@ -190,16 +190,16 @@ export function studioModel (parts=[]) {
   // A broad wooden desk, trestles, drawer cabinet, keyboard and mug.
   shell(.12,-.98,[[1.145,4.70,1.69,.075],[1.17,4.75,1.74,.08],[1.28,4.75,1.74,.08],[1.295,4.72,1.71,.07]],wood)
   quad([-2.20,1.296,-.16],[2.44,1.296,-.16],[2.44,1.296,-1.80],[-2.20,1.296,-1.80],'#ffffff',uv(0,1480,1000,480))
-  shell(-.02,-.57,[[1.298,2.57,.83,.08],[1.306,2.56,.82,.08]],'#42514c')
+  shell(-.02,-.57,[[1.298,2.57,.83,.08],[1.306,2.56,.82,.08]],'#766962')
   box(.12,1.14,-.98,4.65,.06,1.65,edge)
   for(const z of [-1.66,-.32]) box(-1.97,.58,z,.15,1.15,.15,charcoal)
-  box(1.82,.59,-.98,.85,1.14,1.34,'#57776d')
+  box(1.82,.59,-.98,.85,1.14,1.34,'#ad9f8c')
   for(let i=0;i<3;i++){
     part('drawer')
     const trayY=.26+i*.34
     box(1.82,trayY-.08,-.52,.72,.025,.45,'#987e64')
     for(const side of [-1,1])box(1.82+side*.35,trayY,-.52,.023,.18,.45,'#93775d')
-    box(1.82,.28+i*.34,-.285,.79,.31,.05,'#759589')
+    box(1.82,.28+i*.34,-.285,.79,.31,.05,'#d9d1bf')
     box(1.82,.34+i*.34,-.25,.25,.035,.035,charcoal)
   }
   part('project')
@@ -284,9 +284,23 @@ export function studioModel (parts=[]) {
   }
   part('contact')
   const card=objects.contact
-  box(card.x,1.326,card.z-.025,card.width+.06,.062,.16,edge)
-  box(card.x,card.y,card.z-.032,card.width+.035,card.height+.035,.06,cream)
-  surface('contact',[1060,1490,900,395])
+  // A single folded sheet rests on two edges. The open ends reveal its thickness.
+  const foot=card.y-card.height/2,front=card.z+card.height*card.rake/2
+  const crest=front-card.height*card.rake
+  const fold=[[foot,front],[foot+card.height,crest],[foot+card.height+.006,crest-.006],
+    [foot+card.height+.006,crest-.013],[foot,crest-.106],[foot,crest-.096],
+    [foot+card.height-.005,crest-.010],[foot,front-.009]]
+  const left=card.x-card.width/2,right=card.x+card.width/2
+  for(let i=0;i<fold.length;i++){
+    const a=fold[i],b=fold[(i+1)%fold.length]
+    quad([left,...a],[right,...a],[right,...b],[left,...b],
+      i===0?'#ffffff':i===3?'#484650':'#959196',i===0?uv(1060,1490,900,395):null)
+  }
+  for(const x of [left,right]){
+    for(const corners of [[0,1,6,7],[1,2,3,6],[3,4,5,6]]){
+      quad(...corners.map(i=>[x,...fold[i]]),'#b3adb0')
+    }
+  }
   part('lamp')
   buildTaskLamp({tri,tube,part})
 
@@ -300,13 +314,13 @@ export function studioModel (parts=[]) {
     oval(end[0],.09,end[2],.085,.08,.079,'#344143')
   }
   part('chair')
-  oval(px,.74,pz,.47,.105,.42,teal)
+  oval(px,.74,pz,.47,.105,.42,'#58647a')
   tube([px,.72,pz+.22],[px,1.30,pz+.43],.055,.055,charcoal)
-  shell(px,pz+.43,[[.98,.53,.10,.038],[1.05,.77,.14,.054],[1.28,.81,.16,.065,.035],[1.44,.72,.14,.055,.04],[1.48,.60,.10,.045,.035]],'#385e59')
-  shell(px,pz+.45,[[1.016,.51,.10,.043],[1.08,.72,.16,.061],[1.32,.75,.17,.064,.027],[1.43,.65,.12,.048,.035]],'#63867a')
+  shell(px,pz+.43,[[.98,.53,.10,.038],[1.05,.77,.14,.054],[1.28,.81,.16,.065,.035],[1.44,.72,.14,.055,.04],[1.48,.60,.10,.045,.035]],'#465166')
+  shell(px,pz+.45,[[1.016,.51,.10,.043],[1.08,.72,.16,.061],[1.32,.75,.17,.064,.027],[1.43,.65,.12,.048,.035]],'#748095')
   for(const side of [-1,1]){
     tube([px+side*.36,.75,pz],[px+side*.41,1.03,pz+.02],.034,.032,charcoal)
-    shell(px+side*.41,pz-.045,[[1.025,.091,.33,.039],[1.058,.109,.35,.042],[1.07,.091,.33,.039]],'#334846')
+    shell(px+side*.41,pz-.045,[[1.025,.091,.33,.039],[1.058,.109,.35,.042],[1.07,.091,.33,.039]],'#434650')
   }
   buildDeveloper({tri,oval,tube,shell})
   parts[parts.length-1].end=vertices.length
