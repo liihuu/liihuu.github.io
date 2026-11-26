@@ -14,7 +14,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
 .room-canvas:active { cursor: grabbing }
 .room-canvas:focus-visible { outline: 3px inset #e4b16e; outline-offset: -4px }
 .outline { pointer-events: none }
-[data-theme="dark"] .room-canvas { filter: saturate(.93) brightness(.89) }
+[data-theme="dark"] .studio-room { background: #1e2b38 }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap }
 .object-hit {
   position: absolute; left: 0; top: 0; width: 0; height: 0; padding: 0; border: 0;
@@ -25,12 +25,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
   position: absolute; color: #f8f0dd; background: #293b32df;
   border: 1px solid #e6d4af52; box-shadow: 0 3px 15px #283b321c;
 }
-.theme-toggle { top: max(18px,env(safe-area-inset-top)); right: max(18px,env(safe-area-inset-right)); width: 37px; height: 37px; border-radius: 50%; display: grid; place-items: center }
+.theme-toggle { top: max(18px,env(safe-area-inset-top)); right: max(18px,env(safe-area-inset-right)); width: 37px; height: 37px; padding: 0; border-radius: 50%; display: grid; place-items: center }
 .theme-toggle__icon,.theme-toggle svg { width: 16px; height: 16px }
-.theme-toggle__glyph { display: none }
-.theme-toggle__glyph.is-active { display: block }
-.theme-transition__sheet-wrap { position: fixed; inset: 0; z-index: 3; pointer-events: none }
-.theme-transition__sheet { position: absolute; inset: 0 }
 .view-controls { left: 50%; bottom: max(16px,env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; padding: 2px 4px 2px 14px; gap: 8px; border-radius: 24px; white-space: nowrap; font-size: 12px }
 .view-controls button { border: 0; border-left: 1px solid #c9cdb34d; background: transparent; font-size: 20px; line-height: 1; width: 36px; height: 32px }
 .detail { max-width: min(92vw,460px); width: 100%; max-height: 89dvh; padding: 0; border: 1px solid #a69470; border-radius: 10px; background: var(--paper); color: var(--ink); box-shadow: 0 22px 85px #13271f6b }

@@ -50,30 +50,99 @@ export function drawScreen (g) {
   }
 }
 
+function ease(from,to,value) {
+  const t=Math.max(0,Math.min(1,(value-from)/(to-from)))
+  return t*t*(3-2*t)
+}
+
+function blendColor(a,b,t) {
+  const channels=a.map((v,i)=>Math.round(v+(b[i]-v)*t))
+  return 'rgb('+channels.join(',')+')'
+}
+
+// The buildings are painted last, so they occlude both bodies at the horizon.
+export function createWindowSky () {
+  const canvas=document.createElement('canvas')
+  canvas.width=470
+  canvas.height=320
+  const g=canvas.getContext('2d')
+  g.scale(.5,.5)
+  const day=[[113,183,217],[190,227,237],[250,229,189]]
+  const dusk=[[112,128,177],[232,158,146],[255,204,143]]
+  const night=[[16,25,54],[52,70,116],[114,94,131]]
+  const buildingsDay=[[173,195,203],[134,159,169],[97,130,140]]
+  const buildingsNight=[[64,82,117],[42,62,88],[24,45,64]]
+  let previous=-1
+
+  function disc(x,y,r,color) {
+    g.fillStyle=color
+    g.beginPath()
+    g.arc(x,y,r,0,Math.PI*2)
+    g.fill()
+  }
+  function paint(phase) {
+    if(phase===previous)return false
+    previous=phase
+    const setting=ease(0,.56,phase)
+    const rising=ease(.46,1,phase)
+    const sky=g.createLinearGradient(0,0,0,640)
+    for(const [i,stop] of [0,.65,1].entries()){
+      const color=phase<.48 ? blendColor(day[i],dusk[i],ease(0,.48,phase))
+        : blendColor(dusk[i],night[i],ease(.48,1,phase))
+      sky.addColorStop(stop,color)
+    }
+    g.fillStyle=sky
+    g.fillRect(0,0,940,640)
+    g.globalAlpha=ease(.54,.92,phase)
+    for(let i=0;i<80;i++){
+      const x=(i*193+Math.sin(i)*73+940)%940, y=(i*117+Math.cos(i)*31+320)%320
+      disc(x,y,i%5===0?2.3:1.3,i%3?'#b9cde2':'#f9e6bf')
+    }
+    g.globalAlpha=1
+    const sunX=660+142*setting
+    const sunY=165+330*setting-26*Math.sin(Math.PI*setting)
+    const halo=g.createRadialGradient(sunX,sunY,38,sunX,sunY,155)
+    halo.addColorStop(0,'rgba(255,203,130,.28)')
+    halo.addColorStop(1,'rgba(255,196,119,0)')
+    g.globalAlpha=1-ease(.37,.56,phase)
+    disc(sunX,sunY,155,halo)
+    disc(sunX,sunY,56,blendColor([255,242,186],[255,174,106],setting))
+    const moonX=498+142*rising, moonY=487-341*rising-22*Math.sin(Math.PI*rising)
+    g.globalAlpha=ease(.46,.74,phase)
+    disc(moonX,moonY,48,'#fff2ca')
+    for(const [x,y,r] of [[-13,-18,6],[13,12,8],[-18,14,4]])disc(moonX+x,moonY+y,r,'#e3d9b6')
+    g.globalAlpha=1-ease(.18,.71,phase)
+    g.fillStyle='#f4faf6dc'
+    for(const [x,y] of [[115,140],[420,84],[797,248]]){
+      g.beginPath();g.ellipse(x+20*phase,y,60,12,0,0,2*Math.PI)
+      g.ellipse(x-12+20*phase,y-7,25,15,0,0,2*Math.PI);g.fill()
+    }
+    g.globalAlpha=1
+    for(let layer=0;layer<3;layer++){
+      const gap=50+22*layer
+      const facade=blendColor(buildingsDay[layer],buildingsNight[layer],ease(.16,.93,phase))
+      for(let i=0;i*gap-25<940;i++){
+        const y=365+layer*70+Math.sin(i*2.07+layer)*44+Math.cos(i*1.6)*32
+        g.fillStyle=facade;g.fillRect(i*gap-25,y,gap-3,640-y)
+        const lights=ease(.45+(i%4)*.06,.96,phase)
+        g.fillStyle=blendColor([196,214,211],i%3?[242,200,129]:[166,202,215],lights)
+        for(let row=0;row<5;row++)for(let col=0;col<3;col++)if((row+col+i)%3===0)g.fillRect(i*gap-15+col*15,y+17+row*24,7,10)
+      }
+    }
+    return true
+  }
+  return {canvas,paint}
+}
+
 export function makeAtlas () {
   const atlas=document.createElement('canvas')
   atlas.width=atlas.height=2048
   const g=atlas.getContext('2d')
   drawScreen(g)
-  // The same atlas supplies the view outdoors, a wood floor and a framed print.
+  // Static surfaces stay resident while the window texture changes.
   function region (x,y,w,h,draw) {
     g.save();g.translate(x,y);g.beginPath();g.rect(0,0,w,h);g.clip();draw();g.restore()
   }
-  region(1080,0,940,640,()=>{
-    const sky=g.createLinearGradient(0,0,0,640)
-    sky.addColorStop(0,'#6f9eaf');sky.addColorStop(.58,'#f4bf9a');sky.addColorStop(1,'#f3d3a3')
-    g.fillStyle=sky;g.fillRect(0,0,940,640)
-    g.fillStyle='#ffe5ac';g.beginPath();g.arc(690,265,71,0,2*Math.PI);g.fill()
-    for(let layer=0;layer<3;layer++){
-      const gap=50+22*layer
-      for(let i=0;i<22;i++){
-        const y=365+layer*70+Math.sin(i*2.07+layer)*44+Math.cos(i*1.6)*32
-        g.fillStyle=['#a9adb2','#84929c','#5a7781'][layer];g.fillRect(i*gap-25,y,gap-3,640-y)
-        g.fillStyle='#d9c9a8'
-        for(let row=0;row<3;row++)for(let col=0;col<3;col++)if((row+col+i)%3===0)g.fillRect(i*gap-15+col*15,y+17+row*24,6,8)
-      }
-    }
-  })
   region(0,700,1000,760,()=>{
     g.fillStyle='#b98a64';g.fillRect(0,0,1000,760)
     for(let i=0;i<12;i++){

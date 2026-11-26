@@ -1,7 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
-
-import ThemeTransition from './ThemeTransition'
-import { getStoredTheme } from './themes'
+import React from 'react'
 
 function SunIcon () {
   return (
@@ -20,61 +17,11 @@ function MoonIcon () {
   )
 }
 
-export default function ThemeSwitcher () {
-  const [theme, setTheme] = useState(getStoredTheme)
-  const [transition, setTransition] = useState(null)
-  const switchingRef = useRef(false)
-  const toggleRef = useRef(null)
-
-  const handleApply = useCallback((next) => {
-    setTheme(next)
-  }, [])
-
-  const handleComplete = useCallback(() => {
-    switchingRef.current = false
-    setTransition(null)
-  }, [])
-
-  const toggle = () => {
-    if (switchingRef.current) return
-
-    const next = theme === 'dark' ? 'light' : 'dark'
-    switchingRef.current = true
-    setTransition({ from: theme, to: next })
-  }
-
-  const isDark = theme === 'dark'
-  const switching = transition !== null
-
-  return (
-    <>
-      {transition && (
-        <ThemeTransition
-          from={transition.from}
-          to={transition.to}
-          toggleRef={toggleRef}
-          onApply={handleApply}
-          onComplete={handleComplete}
-        />
-      )}
-
-      <button
-        ref={toggleRef}
-        type="button"
-        className={`theme-toggle${switching ? ' is-switching' : ''}`}
-        onClick={toggle}
-        aria-label={isDark ? '切换到浅色模式' : '切换到深色模式'}
-        aria-busy={switching}
-      >
-        <span className="theme-toggle__icon">
-          <span className={`theme-toggle__glyph${isDark ? ' is-active' : ''}`} aria-hidden={!isDark}>
-            <SunIcon />
-          </span>
-          <span className={`theme-toggle__glyph${!isDark ? ' is-active' : ''}`} aria-hidden={isDark}>
-            <MoonIcon />
-          </span>
-        </span>
-      </button>
-    </>
-  )
+export default function ThemeSwitcher ({theme,onChange}) {
+  const dark=theme==='dark'
+  const label=dark?'切换到白天':'切换到夜晚'
+  return <button type="button" className="theme-toggle" aria-label={label}
+    onClick={()=>onChange(dark?'light':'dark')}>
+    <span className="theme-toggle__icon" aria-hidden="true">{dark?<SunIcon/>:<MoonIcon/>}</span>
+  </button>
 }

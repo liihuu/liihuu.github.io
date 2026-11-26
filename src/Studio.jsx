@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { studioModel } from './studioModel'
-import { drawScreen, makeAtlas } from './studioTextures'
+import { createWindowSky, drawScreen, makeAtlas } from './studioTextures'
 
 import ThemeSwitcher from './ThemeSwitcher'
+import { applyTheme, getStoredTheme } from './themes'
 import { objects, profile } from './studioObjects'
 import qrcode from './assets/qrcode.png'
 
@@ -32,18 +33,51 @@ const vertexSource = `
 const fragmentSource = `
   precision mediump float;
   uniform sampler2D atlas;
+  uniform sampler2D sky;
+  uniform float night;
   varying vec3 world;
   varying vec3 tint;
   varying vec2 texcoord;
   void main() {
-    vec3 color = texcoord.x < 0. ? tint : texture2D(atlas,texcoord).rgb;
-    // Window light on the plaster and contact shading behind the desk.
-    float wall = 1. - smoothstep(.05,.25,abs(world.z+2.21));
-    vec2 shadow = (world.xy-vec2(.14,1.92))/vec2(1.65,.82);
-    color *= 1. - .24 * wall * exp(-dot(shadow,shadow));
-    float pool = exp(-dot((world-vec3(-2.65,2.2,-.1))*.47,(world-vec3(-2.65,2.2,-.1))*.47));
-    color += vec3(.07,.045,.012) * pool;
-    gl_FragColor = vec4(color,1.);
+    bool outside = texcoord.x > .52 && texcoord.y >= 0. && texcoord.y < .32;
+    bool screen = texcoord.x >= 0. && texcoord.x < .51 && texcoord.y < .22;
+    vec3 base = texcoord.x < 0. ? tint : texture2D(atlas,texcoord).rgb;
+    if(outside) {
+      vec2 uv=(texcoord*2048.-vec2(1080.,0.))/vec2(940.,640.);
+      gl_FragColor=texture2D(sky,uv);
+      return;
+    }
+    if(screen) {
+      gl_FragColor=vec4(base*(1.+.16*night),1.);
+      return;
+    }
+    // Trace sunlight back to the opening and its two wooden crossbars.
+    float travel = world.x+2.84;
+    vec2 sash = vec2(world.z+.32*travel, world.y+.48*travel);
+    vec2 aperture = smoothstep(vec2(-1.34,1.18),vec2(-1.20,1.30),sash) *
+      (1.-smoothstep(vec2(1.05,2.80),vec2(1.18,2.92),sash));
+    float sun = aperture.x*aperture.y*smoothstep(.015,.09,abs(sash.x+.08))*
+      smoothstep(.015,.09,abs(sash.y-2.24))*smoothstep(.0,.12,travel);
+    vec3 daylight = base*(vec3(.96,.98,1.)+sun*vec3(.31,.21,.085));
+    float wall = 1.-smoothstep(.05,.25,abs(world.z+2.21));
+    vec2 shadow=(world.xy-vec2(.14,1.92))/vec2(1.65,.82);
+    daylight *= 1.-.24*wall*exp(-dot(shadow,shadow));
+
+    // Warm task light falls onto the desk; the monitor casts a wide, cool fill.
+    vec3 lamp = world-vec3(-1.69,2.09,-1.43);
+    float spread=.26+.78*max(-lamp.y,0.);
+    float beam=exp(-dot(lamp.xz,lamp.xz)/(spread*spread))*
+      (1.-smoothstep(.0,.15,lamp.y))/(1.+.48*lamp.y*lamp.y);
+    float bounce=1./(1.+2.7*dot(lamp,lamp));
+    vec3 monitor=(world-vec3(.05,2.12,-1.25))*vec3(.69,.94,.72);
+    float glow=1./(1.+1.4*dot(monitor,monitor));
+    vec3 moon=(world-vec3(-2.84,2.12,-.08))*vec3(.64,.66,.54);
+    float moonlight=.65/(1.+dot(moon,moon));
+    vec3 lamplight=base*(vec3(.19,.25,.38)+moonlight*vec3(.19,.29,.48)+
+      (beam+.60*bounce)*vec3(1.25,.80,.34)+glow*vec3(.31,.57,.63));
+    bool bulb=length(lamp.xz)<.226 && abs(lamp.y)<.016;
+    if(bulb) lamplight=vec3(1.,.91,.63);
+    gl_FragColor=vec4(mix(daylight,lamplight,night),1.);
   }`
 
 function gpuRenderer (canvas, vertices, atlas) {
@@ -70,16 +104,26 @@ function gpuRenderer (canvas, vertices, atlas) {
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,atlas)
   gl.generateMipmap(gl.TEXTURE_2D)
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR)
+  const windowSky=createWindowSky()
+  const skyTexture=gl.createTexture()
+  gl.activeTexture(gl.TEXTURE1)
+  gl.bindTexture(gl.TEXTURE_2D,skyTexture)
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,windowSky.canvas.width,windowSky.canvas.height,0,gl.RGBA,gl.UNSIGNED_BYTE,null)
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE)
+  gl.uniform1i(gl.getUniformLocation(program,'sky'),1)
   gl.enable(gl.DEPTH_TEST)
-  const uniforms=Object.fromEntries(['camera','scale','time'].map(k=>[k,gl.getUniformLocation(program,k)]))
+  const uniforms=Object.fromEntries(['camera','scale','time','night'].map(k=>[k,gl.getUniformLocation(program,k)]))
   return {
-    draw (matrix,sx,sy,time) {
+    draw (matrix,sx,sy,time,night) {
+      if(windowSky.paint(night))gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,windowSky.canvas)
       gl.viewport(0,0,canvas.width,canvas.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT)
       gl.uniformMatrix3fv(uniforms.camera,false,matrix)
-      gl.uniform2f(uniforms.scale,sx,sy);gl.uniform1f(uniforms.time,time)
+      gl.uniform2f(uniforms.scale,sx,sy);gl.uniform1f(uniforms.time,time);gl.uniform1f(uniforms.night,night)
       gl.drawArrays(gl.TRIANGLES,0,vertices.length/12)
     },
-    dispose () { gl.deleteBuffer(buffer);gl.deleteTexture(texture);gl.deleteProgram(program) }
+    dispose () { gl.deleteBuffer(buffer);gl.deleteTexture(texture);gl.deleteTexture(skyTexture);gl.deleteProgram(program) }
   }
 }
 
@@ -88,7 +132,10 @@ function gpuRenderer (canvas, vertices, atlas) {
 function softwareRenderer (canvas, vertices, atlas) {
   const ctx=canvas.getContext('2d')
   const pixels=atlas.getContext('2d').getImageData(0,0,atlas.width,atlas.height).data
-  return function draw(matrix,sx,sy) {
+  const sky=createWindowSky()
+  let skyPixels
+  return function draw(matrix,sx,sy,time,night) {
+    if(sky.paint(night))skyPixels=sky.canvas.getContext('2d').getImageData(0,0,sky.canvas.width,sky.canvas.height).data
     const w=canvas.width,h=canvas.height
     const image=ctx.createImageData(w,h), depth=new Float32Array(w*h).fill(-Infinity)
     function project(i) {
@@ -112,11 +159,43 @@ function softwareRenderer (canvas, vertices, atlas) {
         depth[k]=z
         let source=fill,offset=0
         if(vertices[i+9]>=0){
-          const tx=Math.floor(atlas.width*(t*vertices[i+9]+u*vertices[i+21]+v*vertices[i+33]))
-          const ty=Math.floor(atlas.height*(t*vertices[i+10]+u*vertices[i+22]+v*vertices[i+34]))
-          source=pixels;offset=4*(ty*atlas.width+tx)
+          let tx=Math.floor(atlas.width*(t*vertices[i+9]+u*vertices[i+21]+v*vertices[i+33]))
+          let ty=Math.floor(atlas.height*(t*vertices[i+10]+u*vertices[i+22]+v*vertices[i+34]))
+          if(tx>=1080 && ty<640) {
+            tx=clamp(Math.floor((tx-1080)/940*sky.canvas.width),0,sky.canvas.width-1)
+            ty=clamp(Math.floor(ty/640*sky.canvas.height),0,sky.canvas.height-1)
+            source=skyPixels;offset=4*(ty*sky.canvas.width+tx)
+          }else{
+            source=pixels;offset=4*(ty*atlas.width+tx)
+          }
         }
-        for(let j=0;j<3;j++)image.data[k*4+j]=source[offset+j]
+        // Reconstruct world position from the orthographic depth, even on broad wall triangles.
+        const vx=(2*(x+.5)/w-1)/sx, vy=(1-2*(y+.5)/h)/sy
+        const wx=centre[0]+matrix[0]*vx+matrix[1]*vy+matrix[2]*z
+        const wy=centre[1]+matrix[3]*vx+matrix[4]*vy+matrix[5]*z
+        const wz=centre[2]+matrix[6]*vx+matrix[7]*vy+matrix[8]*z
+        let r=1,g=1,b=1
+        const litSurface=vertices[i+9]<0 || vertices[i+10]>.32
+        if(litSurface){
+          const travel=wx+2.84, sz=wz+.32*travel, hy=wy+.48*travel
+          if(travel>0 && sz>-1.34 && sz<1.18 && hy>1.18 && hy<2.92 && Math.abs(sz+.08)>.05 && Math.abs(hy-2.24)>.05){
+            r=1.27;g=1.19;b=1.085
+          }
+        }
+        if(litSurface && night){
+          const lx=wx+1.69,ly=wy-2.09,lz=wz+1.43
+          const spread=.26+.78*Math.max(-ly,0)
+          const beam=Math.exp(-(lx*lx+lz*lz)/(spread*spread))*clamp(1-ly/.15,0,1)/(1+.48*ly*ly)
+          const warm=beam+.6/(1+2.7*(lx*lx+ly*ly+lz*lz))
+          const cool=1/(1+1.4*((.69*(wx-.05))**2+(.94*(wy-2.12))**2+(.72*(wz+1.25))**2))
+          const moon=.65/(1+(.64*(wx+2.84))**2+(.66*(wy-2.12))**2+(.54*(wz+.08))**2)
+          r+=(.19+.19*moon+1.25*warm+.31*cool-r)*night
+          g+=(.25+.29*moon+.80*warm+.57*cool-g)*night
+          b+=(.38+.48*moon+.34*warm+.63*cool-b)*night
+        }
+        image.data[k*4]=source[offset]*r
+        image.data[k*4+1]=source[offset+1]*g
+        image.data[k*4+2]=source[offset+2]*b
         image.data[k*4+3]=255
       }
     }
@@ -128,6 +207,13 @@ export default function Studio () {
   const ref=useRef(null), fallback=useRef(null), dialog=useRef(null), detail=useRef(null)
   const hitAreas=useRef({}), resetView=useRef(null)
   const [panel,setPanel]=useState(null)
+  const [theme,setTheme]=useState(getStoredTheme)
+  const changeLighting=useRef(null)
+  function switchScene(next){
+    applyTheme(next)
+    setTheme(next)
+    changeLighting.current?.(next==='dark'?1:0)
+  }
   function openPanel(key) {
     setPanel(key)
     if(!dialog.current.open) dialog.current.showModal()
@@ -138,6 +224,11 @@ export default function Studio () {
     const target=gpu?canvas:fallback.current
     const render=gpu?gpu.draw:softwareRenderer(target,model,atlas)
 
+    let night=getStoredTheme()==='dark'?1:0
+    let startNight=night,targetNight=night,started=0
+    changeLighting.current=next=>{
+      startNight=night;targetNight=next;started=performance.now();refresh()
+    }
     let {yaw,pitch}=HOME
     let drag,frame=0,visible=true,lastDraw=-100,dirty=true
     const motion=window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -167,10 +258,14 @@ export default function Studio () {
             node.style.transform='matrix('+[a,b*d,0,c,left,top].join(',')+')'
           }
         }
-        render(matrix,2*size/w,2*size/h,motion.matches?0:now/1000)
+        // A reversal traverses only the remaining part of the same sky path.
+        const duration=1600*Math.abs(targetNight-startNight)
+        const t=duration && !motion.matches ? clamp((now-started)/duration,0,1) : 1
+        night=t===1 ? targetNight : startNight+(targetNight-startNight)*t
+        render(matrix,2*size/w,2*size/h,motion.matches?0:now/1000,night)
         lastDraw=now;dirty=false
       }
-      if(gpu&&!motion.matches)frame=requestAnimationFrame(draw)
+      if(!motion.matches && (gpu || night!==targetNight))frame=requestAnimationFrame(draw)
     }
     function refresh(){dirty=true;if(!frame)frame=requestAnimationFrame(draw)}
     resetView.current=()=>{yaw=HOME.yaw;pitch=HOME.pitch;refresh()}
@@ -212,6 +307,7 @@ export default function Studio () {
     motion.addEventListener('change',refresh);document.addEventListener('visibilitychange',refresh)
     refresh()
     return ()=>{
+      changeLighting.current=null
       cancelAnimationFrame(frame);gpu?.dispose();resize.disconnect();observer.disconnect()
       surface.removeEventListener('pointerdown',down);surface.removeEventListener('pointermove',move)
       window.removeEventListener('pointerup',release);window.removeEventListener('pointercancel',release)
@@ -231,7 +327,7 @@ export default function Studio () {
       <button key={key} className="object-hit" aria-label={obj.label} aria-haspopup="dialog"
         ref={el=>{hitAreas.current[key]=el}} onClick={()=>openPanel(key)} />
     )}
-    <ThemeSwitcher />
+    <ThemeSwitcher theme={theme} onChange={switchScene} />
     <div className="view-controls">
       <span>拖动环顾 · 点击物件探索</span>
       <button type="button" onClick={()=>resetView.current?.()} aria-label="复位视角" title="复位视角">⟲</button>
