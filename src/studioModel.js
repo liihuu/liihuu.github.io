@@ -190,7 +190,7 @@ export function studioModel (parts=[]) {
   // A broad wooden desk, trestles, drawer cabinet, keyboard and mug.
   shell(.12,-.98,[[1.145,4.70,1.69,.075],[1.17,4.75,1.74,.08],[1.28,4.75,1.74,.08],[1.295,4.72,1.71,.07]],wood)
   quad([-2.20,1.296,-.16],[2.44,1.296,-.16],[2.44,1.296,-1.80],[-2.20,1.296,-1.80],'#ffffff',uv(0,1480,1000,480))
-  shell(-.02,-.57,[[1.298,2.57,.83,.08],[1.306,2.56,.82,.08]],'#766962')
+  shell(-.02,-.57,[[1.298,2.57,.83,.08],[1.306,2.56,.82,.08]],'#4d5e63')
   box(.12,1.14,-.98,4.65,.06,1.65,edge)
   for(const z of [-1.66,-.32]) box(-1.97,.58,z,.15,1.15,.15,charcoal)
   box(1.82,.59,-.98,.85,1.14,1.34,'#ad9f8c')
@@ -203,12 +203,12 @@ export function studioModel (parts=[]) {
     box(1.82,.34+i*.34,-.25,.25,.035,.035,charcoal)
   }
   part('project')
-  box(.05,1.32,-1.27,.82,.055,.43,charcoal)
-  box(.05,1.56,-1.46,.13,.51,.12,charcoal)
-  shell(.05,-1.47,[[1.39,3.13,.085,.034],[1.425,3.235,.17,.055],[2.77,3.235,.17,.055],[2.81,3.17,.12,.045]],'#505b60')
-  shell(.05,-1.39,[[1.392,3.17,.077,.026],[1.418,3.24,.083,.028],[2.781,3.24,.083,.028],[2.81,3.175,.077,.026]],'#263039')
+  box(.05,1.32,-1.27,.72,.055,.34,charcoal)
+  box(.05,1.55,-1.46,.105,.43,.10,charcoal)
+  box(.05,1.76,-1.45,.34,.055,.10,'#3e4a4f')
+  // One continuous slim enclosure keeps the panel seated in a believable body.
+  shell(.05,-1.43,[[1.39,3.13,.085,.028],[1.425,3.235,.110,.040],[2.775,3.235,.110,.040],[2.80,3.13,.085,.028]],charcoal)
   box(1.50,1.423,-1.346,.035,.008,.006,'#b1d5b1')
-  for(let i=0;i<26;i++)box(-1.30+i*.101,2.799,-1.47,.059,.012,.043,'#2d393c')
   surface('project',[0,0,1024,440])
   part('keyboard')
   const pitch=.099,keyboardLeft=-1.23
@@ -294,11 +294,11 @@ export function studioModel (parts=[]) {
   for(let i=0;i<fold.length;i++){
     const a=fold[i],b=fold[(i+1)%fold.length]
     quad([left,...a],[right,...a],[right,...b],[left,...b],
-      i===0?'#ffffff':i===3?'#484650':'#959196',i===0?uv(1060,1490,900,395):null)
+      i===0?'#e7dcc9':i===3?'#625e59':'#a39889',i===0?uv(1060,1490,900,395):null)
   }
   for(const x of [left,right]){
     for(const corners of [[0,1,6,7],[1,2,3,6],[3,4,5,6]]){
-      quad(...corners.map(i=>[x,...fold[i]]),'#b3adb0')
+      quad(...corners.map(i=>[x,...fold[i]]),'#b1a28d')
     }
   }
   part('lamp')
