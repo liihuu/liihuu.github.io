@@ -40,10 +40,15 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
   position: absolute; color: #f8f0dd; background: #293b32df;
   border: 1px solid #e6d4af52; box-shadow: 0 3px 15px #283b321c;
 }
-.theme-toggle { top: max(18px,env(safe-area-inset-top)); right: max(18px,env(safe-area-inset-right)); width: 37px; height: 37px; padding: 0; border-radius: 50%; display: grid; place-items: center }
+.theme-toggle { top: max(18px,env(safe-area-inset-top)); right: max(18px,env(safe-area-inset-right)); width: 37px; height: 37px; padding: 0; border-radius: 50%; display: grid; place-items: center; background: #3b493fe8; border-color: #e6d4af60; transition: background-color .18s ease, transform .18s ease, box-shadow .18s ease }
+.theme-toggle:hover { background: #4d5949f0; box-shadow: 0 4px 16px #15271f55 }
+.theme-toggle:active { transform: scale(.92) }
 .theme-toggle__icon,.theme-toggle svg { width: 16px; height: 16px }
-.view-controls { left: 50%; bottom: max(16px,env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; padding: 2px 4px 2px 14px; gap: 8px; border-radius: 24px; white-space: nowrap; font-size: 12px }
-.view-controls button { border: 0; border-left: 1px solid #c9cdb34d; background: transparent; font-size: 20px; line-height: 1; width: 36px; height: 32px }
+.view-controls { left: 50%; bottom: max(16px,env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; padding: 2px 4px 2px 14px; gap: 8px; border: 1px solid #e6d4af45; border-radius: 24px; background: #3b493fe8; white-space: nowrap; font-size: 12px }
+.view-controls button { display: grid; place-items: center; width: 36px; height: 32px; padding: 0; border: 0; border-left: 1px solid #e6d4af45; border-radius: 0; background: transparent; font-size: 20px; line-height: 1 }
+.view-controls button span { display: block; transform: translateY(-1px); transition: transform .22s cubic-bezier(.22,.8,.28,1) }
+.view-controls button:hover span { color: #f8e4b5 }
+.view-controls button:active span { transform: translateY(-1px) rotate(-120deg) scale(.9) }
 .detail { max-width: min(92vw, 620px); width: 100%; max-height: 89dvh; padding: 0; overflow: hidden; border: 1px solid #bba87f; border-radius: 14px; background: #f5ead6; color: #29453d; box-shadow: 0 24px 80px #0d211b99 }
 .detail[open] { animation: detail-enter .24s cubic-bezier(.22,.8,.28,1) both }
 .detail::backdrop { background: #10251e99; backdrop-filter: blur(6px) saturate(.8) }

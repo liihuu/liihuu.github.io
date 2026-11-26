@@ -568,7 +568,7 @@ export default function Studio () {
     <ThemeSwitcher theme={theme} onChange={switchScene} />
     <div className="view-controls">
       <span>拖动环顾 · 点击物件探索</span>
-      <button type="button" onClick={()=>resetView.current?.()} aria-label="复位视角" title="复位视角">⟲</button>
+      <button type="button" onClick={()=>resetView.current?.()} aria-label="复位视角" title="复位视角"><span aria-hidden="true">⟲</span></button>
     </div>
     <dialog ref={dialog} className="detail contact" aria-labelledby="panel-title"
       onClick={e=>{if(e.target===dialog.current)dialog.current.close()}}>
