@@ -29,14 +29,32 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
 .theme-toggle__icon,.theme-toggle svg { width: 16px; height: 16px }
 .view-controls { left: 50%; bottom: max(16px,env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; padding: 2px 4px 2px 14px; gap: 8px; border-radius: 24px; white-space: nowrap; font-size: 12px }
 .view-controls button { border: 0; border-left: 1px solid #c9cdb34d; background: transparent; font-size: 20px; line-height: 1; width: 36px; height: 32px }
-.detail { max-width: min(92vw,460px); width: 100%; max-height: 89dvh; padding: 0; border: 1px solid #a69470; border-radius: 10px; background: var(--paper); color: var(--ink); box-shadow: 0 22px 85px #13271f6b }
-.detail::backdrop { background: #182e2580; backdrop-filter: blur(3px) }
-.detail article { position: relative; padding: clamp(24px,5vw,40px) }
-.detail h2 { font: italic 46px/1.1 Georgia,serif; margin: 0 34px 10px 0 }
-.detail p { line-height: 1.8; margin: 12px 0 18px }
-.detail .role { margin-top: 5px }
-.close { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; background: transparent; border: 1px solid #8a987c77; border-radius: 50%; font-size: 23px }
-.avatar { width: 56px; height: 56px; border-radius: 50%; margin-bottom: 16px }
-.contact article > a { display: block; margin: 14px 0 }
-.contact figure { margin-top: 23px; font-size: 13px }
-.contact figure img { display: block; margin-bottom: 7px }
+.detail { max-width: min(92vw, 620px); width: 100%; max-height: 89dvh; padding: 0; overflow: hidden; border: 1px solid #bba87f; border-radius: 14px; background: #f5ead6; color: #29453d; box-shadow: 0 24px 80px #0d211b99 }
+.detail::backdrop { background: #10251e99; backdrop-filter: blur(6px) saturate(.8) }
+.detail article { position: relative; display: grid; grid-template-columns: 1.28fr .72fr; min-height: 350px }
+.detail__main { padding: clamp(38px, 6vw, 58px) clamp(30px, 6vw, 58px); background: #f5ead6; border-right: 1px solid #c5b58f99 }
+.detail__contact { padding: clamp(38px, 6vw, 58px) clamp(24px, 4vw, 38px) }
+.detail__identity { display: flex; align-items: center; gap: 16px; margin-bottom: 38px }
+.detail h2 { margin: 0 0 7px; font-family: inherit; font-size: clamp(28px, 4vw, 34px); font-weight: 600; line-height: 1.1; letter-spacing: 0 }
+.detail .role { margin: 0; color: #718176; font-size: 13px; letter-spacing: .04em }
+.avatar { width: 56px; height: 56px; flex: 0 0 auto; margin: 0; border: 1px solid #b89b5c; border-radius: 50%; object-fit: cover }
+.detail .bio { max-width: 25em; margin: 0; color: #52655b; font-size: 14px; line-height: 2 }
+.detail .bio a { color: #94682b; text-decoration-color: #94682b66 }
+.close { position: absolute; z-index: 2; top: 13px; right: 13px; width: 30px; height: 30px; padding: 0 0 2px; background: transparent; color: #52655b; border: 0; border-radius: 50%; font-size: 20px; line-height: 1 }
+.close:hover { background: transparent }
+.contact-link { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 6px; padding: 14px 0; border-bottom: 1px solid #b6a58266; color: #29453d; font-size: 12px; text-decoration: none }
+.contact-link span { color: #8b907d; font-size: 11px }
+.contact-link b { color: #94682b; font-size: 22px; font-weight: 400; line-height: .8 }
+.contact figure { margin: 36px 0 0; font-size: 11px; color: #8b907d; letter-spacing: .04em }
+.contact figure img { display: block; width: 104px; height: 104px; margin-bottom: 10px; border: 5px solid #fff; border-radius: 3px }
+.contact figcaption { margin: 0 }
+@media (max-width: 560px) {
+  .detail { max-height: 92dvh; border-radius: 16px }
+  .detail article { display: block; min-height: 0 }
+  .detail__main, .detail__contact { padding: 30px 26px }
+  .detail__main { border-right: 0; border-bottom: 1px solid #c5b58f99 }
+  .detail__identity { margin-bottom: 24px }
+  .detail__contact { padding-top: 24px; padding-bottom: 30px }
+  .contact figure { display: flex; align-items: center; gap: 13px; margin-top: 22px }
+  .contact figure img { margin: 0 }
+ }

@@ -544,12 +544,18 @@ export default function Studio () {
       onClick={e=>{if(e.target===dialog.current)dialog.current.close()}}>
       <article>
         <button className="close" autoFocus aria-label="关闭详情" onClick={()=>dialog.current.close()}>×</button>
-        <img className="avatar" src="/avatar.jpg" alt="liihuu 头像" />
-        <h2 id="panel-title">{profile.name}.</h2>
-        <p className="role">{profile.role}</p><p>{profile.bio}<br />开源项目 <a href={profile.project} target="_blank" rel="noreferrer">KLineChart</a> 的作者。</p>
-        <a href={'mailto:'+profile.email}>{profile.email}</a>
-        <a href={profile.github} target="_blank" rel="noreferrer">GitHub ↗</a>
-        <figure><img src={qrcode} width="145" height="145" alt="微信二维码" /><figcaption>微信扫一扫</figcaption></figure>
+        <div className="detail__main">
+          <div className="detail__identity">
+            <img className="avatar" src="/avatar.jpg" alt="liihuu 头像" />
+            <div><h2 id="panel-title">{profile.name}</h2><p className="role">{profile.role}</p></div>
+          </div>
+          <p className="bio">{profile.bio}<br />开源项目 <a href={profile.project} target="_blank" rel="noreferrer">KLineChart</a> 的作者。</p>
+        </div>
+        <div className="detail__contact">
+          <a className="contact-link" href={'mailto:'+profile.email}><span>邮箱</span>{profile.email}<b>›</b></a>
+          <a className="contact-link" href={profile.github} target="_blank" rel="noreferrer"><span>GitHub</span>@liihuu<b>›</b></a>
+          <figure><img src={qrcode} width="145" height="145" alt="微信二维码" /><figcaption>微信扫一扫，加我聊聊</figcaption></figure>
+        </div>
       </article>
     </dialog>
   </main>
