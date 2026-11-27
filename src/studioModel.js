@@ -273,8 +273,11 @@ export function studioModel (parts=[]) {
   box(.05,1.76,-1.45,.34,.055,.10,'#3e4a4f')
   // One continuous slim enclosure keeps the panel seated in a believable body.
   shell(.05,-1.43,[[1.39,3.13,.085,.028],[1.425,3.235,.110,.040],[2.775,3.235,.110,.040],[2.80,3.13,.085,.028]],charcoal)
-  box(1.50,1.423,-1.346,.035,.008,.006,'#b1d5b1')
   surface('project',[0,0,1024,440])
+  part('monitorSwitch')
+  const power=objects.monitorSwitch
+  box(power.x,power.y,power.z-.005,.104,.022,.012,'#222c30')
+  box(power.x,power.y+.001,power.z,.091,.015,.008,'#4a5557')
   part('keyboard')
   const pitch=.099,keyboardLeft=-1.23
   shell(keyboardLeft+9.2*pitch,-.542,[[1.306,1.88,.652,.026],[1.337,1.88,.652,.026]],charcoal)

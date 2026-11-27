@@ -9,8 +9,7 @@ import { applyTheme, getStoredTheme } from './themes'
 import { objects, profile } from './studioObjects'
 import qrcode from './assets/qrcode.png'
 
-const monitorSwitch={label:'显示器电源开关',x:.05,y:1.35,z:-1.44,width:.22,height:.10}
-const interactiveFaces=[['contact',objects.contact],['lampSwitch',{...lampSwitch,label:'台灯电源开关'}],['monitorSwitch',monitorSwitch]]
+const interactiveFaces=[['contact',objects.contact],['lampSwitch',{...lampSwitch,label:'台灯电源开关'}],['monitorSwitch',objects.monitorSwitch]]
 const HOME = { yaw: .48, pitch: .28 }
 const centre = [.05,1.85,-.46]
 const clamp = (v,min,max) => Math.min(max,Math.max(min,v))

@@ -21,13 +21,12 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
   background: transparent; transform-origin: 0 0; touch-action: none;
 }
 .object-hit:focus-visible { box-shadow: inset 0 0 0 2px #ffe2a5; background: #ffe8bc0c }
-.monitor-switch-hit {
-  display: grid; place-items: center; border: 1px solid #d9c39a; border-radius: 5px;
-  background: #514d4a; box-shadow: inset 0 1px 1px #ffffff38, 0 2px 4px #1f292655;
-  color: #f5d998; font-size: 13px; line-height: 1;
+.monitor-switch-hit { display: grid; place-items: center; border-radius: 3px }
+.monitor-switch-hit::after {
+  content: ''; width: 18%; height: 7%; min-height: 1px;
+  border-radius: 1px; background: #bed6c9;
 }
-.monitor-switch-hit::after { content: '⏻'; transform: translateY(-.5px) }
-.monitor-switch-hit[aria-pressed="false"] { background: #302f30; color: #a67b6b; box-shadow: inset 0 2px 2px #10101066 }
+.monitor-switch-hit[aria-pressed="false"]::after { background: #988673 }
 .mood-indicator {
   position: absolute; z-index: 2; pointer-events: none; transform: translate(-50%, -100%);
   padding: 4px 7px; border: 1px solid #f3d58e; border-radius: 999px;
