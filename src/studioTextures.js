@@ -256,14 +256,20 @@ export function makeAtlas () {
         const x=(i*131+k*223)%850;g.beginPath();g.moveTo(x,y+9+k*13);g.bezierCurveTo(x+55,y+3+k*13,x+78,y+16+k*13,x+145,y+9+k*13);g.stroke()
       }
     }
-    function shade(x,y,rx,ry,alpha) {
-      g.save();g.translate(x,y);g.scale(rx,ry)
-      const grad=g.createRadialGradient(0,0,.01,0,0,1)
-      grad.addColorStop(0,'rgba(59,39,31,'+alpha+')');grad.addColorStop(1,'rgba(59,39,31,0)')
-      g.fillStyle=grad;g.fillRect(-1,-1,2,2);g.restore()
-    }
-    shade(505,190,500,260,.34);shade(385,505,124,115,.38)
-    for(const [x,y] of [[167,99],[167,326],[810,188]])shade(x,y,75,45,.34)
+  })
+  // The woven mat and its inset seam share the rounded top face.
+  region(1080,710,896,287,()=>{
+    g.fillStyle='#4d5d61';g.fillRect(0,0,896,287)
+    g.strokeStyle='#d9d7c519';g.lineWidth=1
+    g.beginPath()
+    for(let x=-288;x<896;x+=5){g.moveTo(x,0);g.lineTo(x+287,287)}
+    g.stroke()
+    g.strokeStyle='#17262828'
+    g.beginPath()
+    for(let x=0;x<1184;x+=6){g.moveTo(x,0);g.lineTo(x-287,287)}
+    g.stroke()
+    g.strokeStyle='#a4aca1';g.lineWidth=1.6;g.setLineDash([4,4])
+    g.beginPath();g.roundRect(6,6,884,275,23);g.stroke()
   })
   region(0,1480,1000,480,()=>{
     g.fillStyle='#bd895f';g.fillRect(0,0,1000,480)

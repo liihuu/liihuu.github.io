@@ -104,6 +104,11 @@ const fragmentSource = `
     } else {
       shaded+=vec3(.14,.16,.16)*gloss*hardware*mix(1.,.42,night);
     }
+    if (world.y < .031) {
+      vec2 desk = (world.xz - vec2(.12,-.98)) / vec2(2.3,.88);
+      vec2 chair = (world.xz - vec2(-.68,.77)) / vec2(.59,.52);
+      shaded *= 1. - .23*exp(-dot(desk,desk)) - .30*exp(-dot(chair,chair));
+    }
     gl_FragColor=vec4(shaded,1.);
   }`
 
@@ -256,6 +261,12 @@ function softwareRenderer (canvas, vertices, atlas) {
           }
         }
         if(vertices[i+9]>=0 && vertices[i+9]<.51 && vertices[i+10]<.22){r*=screenPower;g*=screenPower;b*=screenPower}
+        if(wy<.031){
+          const desk=((wx-.12)/2.3)**2+((wz+.98)/.88)**2
+          const chair=((wx+.68)/.59)**2+((wz-.77)/.52)**2
+          const shade=1-.23*Math.exp(-desk)-.30*Math.exp(-chair)
+          r*=shade;g*=shade;b*=shade
+        }
         image.data[k*4]=source[offset]*r
         image.data[k*4+1]=source[offset+1]*g
         image.data[k*4+2]=source[offset+2]*b
@@ -450,7 +461,7 @@ export default function Studio () {
         const a=Math.cos(yaw),b=Math.sin(yaw),c=Math.cos(pitch),d=Math.sin(pitch)
         const matrix=[a,-b*d,b*c,0,c,d,-b,-a*d,a*c]
         const aspect=w/h
-        const span=aspect<1.2 ? 5.55 : 6.7
+        const span=6.05+.65*clamp((aspect-.8)/.6,0,1)
         const size=Math.min(w/span,h/5.12)
         if(dirty){
           // Map each object face into CSS pixels using the same orthographic camera.
@@ -466,8 +477,9 @@ export default function Studio () {
           mood.current.style.left=w/(2*ratio)+unit*(a*headX-b*headZ)+'px'
           mood.current.style.top=h/(2*ratio)-unit*(-b*d*headX+c*headY-a*d*headZ)-unit*.34+'px'
           const [clockX,clockY,clockZ]=clockCenter.map((v,i)=>v-centre[i])
-          clockHands.current.style.left=w/(2*ratio)+unit*(a*clockX-b*clockZ)+'px'
-          clockHands.current.style.top=h/(2*ratio)-unit*(-b*d*clockX+c*clockY-a*d*clockZ)+'px'
+          const handZ=clockZ+.05
+          clockHands.current.style.left=w/(2*ratio)+unit*(a*clockX-b*handZ)+'px'
+          clockHands.current.style.top=h/(2*ratio)-unit*(-b*d*clockX+c*clockY-a*d*handZ)+'px'
           clockHands.current.style.width=unit*.52+'px'
           clockHands.current.style.height=unit*.52+'px'
           clockHands.current.style.transform=`translate(-50%, -50%) matrix(${a}, ${b*d}, 0, ${c}, 0, 0)`

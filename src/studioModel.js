@@ -37,7 +37,7 @@ export function studioModel (parts=[]) {
   }
   // Horizontal rounded sections can taper independently: useful for moulded
   // shells, keycaps and garments with a distinct waist and shoulders.
-  function shell(x,z,sections,color) {
+  function shell(x,z,sections,color,topRegion) {
     let previous
     for(const [y,w,d,r,shift=0] of sections){
       const ring=[]
@@ -55,7 +55,15 @@ export function studioModel (parts=[]) {
       })
       previous=ring
     }
-    for(let i=1;i<previous.length-1;i++)tri([previous[0],previous[i+1],previous[i]],color)
+    const [,width,depth]=sections.at(-1)
+    for(let i=1;i<previous.length-1;i++){
+      const points=[previous[0],previous[i+1],previous[i]]
+      const coords=topRegion && points.map(([px,,pz])=>[
+        (topRegion[0]+((px-x)/width+.5)*topRegion[2])/2048,
+        (topRegion[1]+((pz-z)/depth+.5)*topRegion[3])/2048
+      ])
+      tri(points,color,null,coords)
+    }
   }
   function oval (x,y,z,rx,ry,rz,color,motion=0,tilt=0) {
     const rotate = ([a,b,c]) => [a,b*Math.cos(tilt)-c*Math.sin(tilt),b*Math.sin(tilt)+c*Math.cos(tilt)]
@@ -139,11 +147,14 @@ export function studioModel (parts=[]) {
   const [clockX,clockY,clockZ]=clockCenter
   oval(clockX,clockY,clockZ,.30,.30,.035,'#415751')
   oval(clockX,clockY,clockZ+.018,.258,.258,.024,'#f1e9d8')
-  for(let i=0;i<12;i++){
-    const angle=i*TAU/12
-    const inner=.205, outer=.228
-    tube([clockX+inner*Math.sin(angle),clockY+inner*Math.cos(angle),clockZ+.048],
-      [clockX+outer*Math.sin(angle),clockY+outer*Math.cos(angle),clockZ+.048],.006,.006,'#53635c')
+  for(let i=0;i<60;i++){
+    const angle=i*TAU/60, hour=i%5===0
+    const length=i%15===0?.035:hour?.025:.011
+    const halfWidth=hour?.0045:.0018
+    const point=(r,w)=>[clockX+r*Math.sin(angle)+w*Math.cos(angle),
+      clockY+r*Math.cos(angle)-w*Math.sin(angle),clockZ+.045]
+    quad(point(.231,-halfWidth),point(.231-length,-halfWidth),
+      point(.231-length,halfWidth),point(.231,halfWidth),hour?'#505d56':'#948e7f')
   }
 
   part('shelf')
@@ -223,7 +234,7 @@ export function studioModel (parts=[]) {
   // A broad wooden desk, trestles, drawer cabinet, keyboard and mug.
   shell(.12,-.98,[[1.145,4.70,1.69,.075],[1.17,4.75,1.74,.08],[1.28,4.75,1.74,.08],[1.295,4.72,1.71,.07]],wood)
   quad([-2.20,1.296,-.16],[2.44,1.296,-.16],[2.44,1.296,-1.80],[-2.20,1.296,-1.80],'#ffffff',uv(0,1480,1000,480))
-  shell(-.02,-.57,[[1.298,2.57,.83,.08],[1.306,2.56,.82,.08]],'#4d5e63')
+  shell(-.02,-.57,[[1.298,2.57,.83,.08],[1.306,2.56,.82,.08]],'#435458',[1080,710,896,287])
   box(.12,1.14,-.98,4.65,.06,1.65,edge)
   for(const z of [-1.66,-.32]) box(-1.97,.58,z,.15,1.15,.15,charcoal)
   for(const x of [1.415,2.225])box(x,.59,-.98,.04,1.14,1.34,'#ad9f8c')
@@ -265,7 +276,12 @@ export function studioModel (parts=[]) {
       }
     }
     box(1.82,.28+i*.34,-.285,.79,.31,.05,'#d9d1bf')
-    box(1.82,.34+i*.34,-.25,.25,.035,.035,charcoal)
+    const pullY=.34+i*.34
+    for(const x of [1.71,1.93])
+      box(x,pullY,-.241,.025,.029,.043,'#424b49')
+    shell(1.82,-.212,[[pullY-.017,.258,.028,.009],
+      [pullY-.012,.266,.037,.012],[pullY+.011,.266,.037,.012],
+      [pullY+.016,.258,.028,.009]],charcoal)
   }
   part('project')
   box(.05,1.32,-1.27,.72,.055,.34,charcoal)
@@ -343,7 +359,10 @@ export function studioModel (parts=[]) {
       quad(ringPoint(r0,y0,i),ringPoint(r1,y1,i),ringPoint(r1,y1,i+1),ringPoint(r0,y0,i+1),
         j<3?'#e0ba83':'#f1d6ac')
     }
-    tri([[cupX,liquidY,cupZ],ringPoint(.128,liquidY,i+1),ringPoint(.128,liquidY,i)],'#794932')
+    // A narrow meniscus rises against the inner glaze.
+    quad(ringPoint(.128,liquidY+.002,i),ringPoint(.122,liquidY,i),
+      ringPoint(.122,liquidY,i+1),ringPoint(.128,liquidY+.002,i+1),'#aa7954')
+    tri([[cupX,liquidY,cupZ],ringPoint(.122,liquidY,i+1),ringPoint(.122,liquidY,i)],'#734631')
   }
   oval(cupX-.045,liquidY+.001,cupZ-.032,.035,.0008,.007,'#be8962')
   for(let i=0;i<12;i++){

@@ -42,20 +42,53 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
 .clock-hands__second { width: 1.5%; height: 42%; background: #ae634b; transform: translateX(-50%) rotate(var(--second-angle)); }
 [data-theme="dark"] .clock-hands__hour, [data-theme="dark"] .clock-hands__minute { background: #18262b }
 .clock-hands__pin { left: 50%; bottom: 50%; width: 7%; height: 7%; border-radius: 50%; background: #35453f; transform: translate(-50%, 50%); }
-.theme-toggle, .view-controls {
-  position: absolute; color: #f8f0dd; background: #293b32df;
-  border: 1px solid #e6d4af52; box-shadow: 0 3px 15px #283b321c;
+.studio-room {
+  --panel: #fbf5e8;
+  --inset: #f0e8d6;
+  --text: #31443c;
+  --subtle: #56675b;
+  --rule: #cfc5b1;
+  --accent: #815b32;
+  --control: #fcf6e9ed;
+  --edge: clamp(14px, 2.6vw, 32px);
 }
-.theme-toggle { top: max(18px,env(safe-area-inset-top)); right: max(18px,env(safe-area-inset-right)); width: 37px; height: 37px; padding: 0; border-radius: 50%; display: grid; place-items: center; background: #3b493fe8; border-color: #e6d4af60; transition: background-color .18s ease, transform .18s ease, box-shadow .18s ease }
-.theme-toggle:hover { background: #4d5949f0; box-shadow: 0 4px 16px #15271f55 }
-.theme-toggle:active { transform: scale(.92) }
-.theme-toggle__icon,.theme-toggle svg { width: 16px; height: 16px }
-.view-controls { left: 50%; bottom: max(16px,env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; padding: 2px 4px 2px 14px; gap: 8px; border: 1px solid #e6d4af45; border-radius: 24px; background: #3b493fe8; white-space: nowrap; font-size: 12px }
-.view-controls button { display: grid; place-items: center; width: 36px; height: 32px; padding: 0; border: 0; border-left: 1px solid #e6d4af45; border-radius: 0; background: transparent; font-size: 20px; line-height: 1 }
-.view-controls button span { display: block; transform: translateY(-1px); transition: transform .22s cubic-bezier(.22,.8,.28,1) }
-.view-controls button:hover span { color: #f8e4b5 }
-.view-controls button:active span { transform: translateY(-1px) rotate(-120deg) scale(.9) }
-.detail { max-width: min(92vw, 620px); width: 100%; max-height: 89dvh; padding: 0; overflow: hidden; border: 1px solid #bba87f; border-radius: 14px; background: #f5ead6; color: #29453d; box-shadow: 0 24px 80px #0d211b99 }
+[data-theme="dark"] .studio-room {
+  --panel: #253039;
+  --inset: #202a32;
+  --text: #f4eddf;
+  --subtle: #bac6c3;
+  --rule: #48545a;
+  --accent: #e2bf8f;
+  --control: #253039eb;
+}
+.theme-toggle, .view-controls {
+  position: absolute; color: var(--text); background: var(--control);
+  border: 1px solid var(--rule); box-shadow: 0 3px 14px #17231e22;
+  backdrop-filter: blur(10px);
+}
+.theme-toggle {
+  top: max(var(--edge),env(safe-area-inset-top)); right: max(var(--edge),env(safe-area-inset-right));
+  width: 44px; height: 44px; padding: 0; border-radius: 50%; display: grid; place-items: center;
+}
+.theme-toggle__icon, .theme-toggle svg { display: block; width: 18px; height: 18px }
+.view-controls {
+  left: 50%; bottom: max(var(--edge),env(safe-area-inset-bottom)); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 14px; padding-left: 18px; border-radius: 24px;
+  white-space: nowrap; font-size: 12px; letter-spacing: .04em;
+}
+.view-controls button {
+  position: relative; display: grid; place-items: center; width: 44px; height: 44px;
+  padding: 0; border: 0; border-radius: 50%; background: transparent; font-size: 20px;
+}
+.view-controls button::before {
+  content: ''; position: absolute; left: -1px; width: 1px; height: 16px; background: var(--rule);
+}
+.theme-toggle:hover, .view-controls button:hover, .close:hover { background: var(--inset); color: var(--accent) }
+.detail {
+  width: min(640px, calc(100% - 32px)); max-width: none; max-height: 89dvh; padding: 0; overflow: auto;
+  border: 1px solid var(--rule); border-radius: 18px; background: var(--panel); color: var(--text);
+  box-shadow: 0 20px 70px #0d211b55;
+}
 .detail[open] { animation: detail-enter .24s cubic-bezier(.22,.8,.28,1) both }
 .detail::backdrop { background: #10251e99; backdrop-filter: blur(6px) saturate(.8) }
 .detail[open]::backdrop { animation: detail-backdrop .24s ease-out both }
@@ -64,30 +97,33 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
 @media (prefers-reduced-motion: reduce) {
   .detail[open], .detail[open]::backdrop { animation: none }
 }
-.detail article { position: relative; display: grid; grid-template-columns: 1.28fr .72fr; min-height: 350px }
-.detail__main { padding: clamp(38px, 6vw, 58px) clamp(30px, 6vw, 58px); background: #f5ead6; border-right: 1px solid #c5b58f99 }
-.detail__contact { padding: clamp(38px, 6vw, 58px) clamp(24px, 4vw, 38px) }
-.detail__identity { display: flex; align-items: center; gap: 16px; margin-bottom: 38px }
-.detail h2 { margin: 0 0 7px; font-family: inherit; font-size: clamp(28px, 4vw, 34px); font-weight: 600; line-height: 1.1; letter-spacing: 0 }
-.detail .role { margin: 0; color: #718176; font-size: 13px; letter-spacing: .04em }
-.avatar { width: 56px; height: 56px; flex: 0 0 auto; margin: 0; border: 1px solid #b89b5c; border-radius: 50%; object-fit: cover }
-.detail .bio { max-width: 25em; margin: 0; color: #52655b; font-size: 14px; line-height: 2 }
-.detail .bio a { color: #94682b; text-decoration-color: #94682b66 }
-.close { position: absolute; z-index: 2; top: 13px; right: 13px; width: 30px; height: 30px; padding: 0 0 2px; background: transparent; color: #52655b; border: 0; border-radius: 50%; font-size: 20px; line-height: 1 }
-.close:hover { background: transparent }
-.contact-link { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 6px; padding: 14px 0; border-bottom: 1px solid #b6a58266; color: #29453d; font-size: 12px; text-decoration: none }
-.contact-link span { color: #8b907d; font-size: 11px }
-.contact-link b { color: #94682b; font-size: 22px; font-weight: 400; line-height: .8 }
-.contact figure { margin: 36px 0 0; font-size: 11px; color: #8b907d; letter-spacing: .04em }
-.contact figure img { display: block; width: 104px; height: 104px; margin-bottom: 10px; border: 5px solid #fff; border-radius: 3px }
-.contact figcaption { margin: 0 }
+.detail article { position: relative; display: grid; grid-template-columns: 1.1fr 1fr }
+.detail__main, .detail__contact { padding: 46px 30px 32px }
+.detail__main { align-content: center }
+.detail__contact { background: var(--inset); border-left: 1px solid var(--rule) }
+.detail__identity { display: flex; align-items: center; gap: 14px; margin-bottom: 24px }
+.detail h2 { margin: 0 0 5px; font-size: 34px; font-weight: 600; line-height: 1.1; letter-spacing: -.04em }
+.detail .role, .contact figcaption { margin: 0; color: var(--subtle); font-size: 12px }
+.avatar { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--rule); object-fit: cover }
+.detail .bio { margin: 0; color: var(--subtle); font-size: 14px; line-height: 1.95 }
+.detail .bio a, .contact-link:hover { color: var(--accent) }
+.close {
+  position: absolute; z-index: 2; top: 5px; right: 5px; width: 40px; height: 40px;
+  background: transparent; color: var(--subtle); border: 0; border-radius: 50%; font-size: 22px;
+}
+.contact-link {
+  display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 5px;
+  min-height: 44px; border-bottom: 1px solid var(--rule); font-size: 13px; text-decoration: none;
+}
+.contact-link span { color: var(--subtle); font-size: 11px }
+.contact-link b { color: var(--accent); font-size: 18px; font-weight: 400 }
+.contact figure { margin: 22px 0 0 }
+.contact figure img { display: block; width: 104px; height: 104px; margin-bottom: 9px; border: 5px solid white; border-radius: 5px }
 @media (max-width: 560px) {
-  .detail { max-height: 92dvh; border-radius: 16px }
-  .detail article { display: block; min-height: 0 }
-  .detail__main, .detail__contact { padding: 30px 26px }
-  .detail__main { border-right: 0; border-bottom: 1px solid #c5b58f99 }
-  .detail__identity { margin-bottom: 24px }
-  .detail__contact { padding-top: 24px; padding-bottom: 30px }
-  .contact figure { display: flex; align-items: center; gap: 13px; margin-top: 22px }
+  .detail article { display: block }
+  .detail__main, .detail__contact { padding: 26px }
+  .detail__identity { margin-bottom: 18px }
+  .detail__contact { border-left: 0; border-top: 1px solid var(--rule); padding-top: 12px }
+  .contact figure { display: flex; align-items: center; gap: 14px; margin-top: 18px }
   .contact figure img { margin: 0 }
- }
+}
