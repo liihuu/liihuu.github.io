@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { diffuserRadius, lampAxis, lampLight, lampSwitch } from './taskLamp'
-import { drinkSurface, studioModel } from './studioModel'
+import { clockCenter, drinkSurface, studioModel } from './studioModel'
 import { createWindowSky, chartStage, drawChartPreview, drawEditorCode, makeAtlas, typedCharacters } from './studioTextures'
 
 import { pickPart, playContact, movePart } from './studioFeedback'
@@ -152,13 +152,13 @@ function gpuRenderer (canvas, vertices, atlas) {
   const uniforms=Object.fromEntries(['camera','scale','time','night','lampPower','screenPower'].map(k=>[k,gl.getUniformLocation(program,k)]))
   return {
     update(start,data){gl.bufferSubData(gl.ARRAY_BUFFER,start*4,data)},
-    draw (matrix,sx,sy,time,night,editor,lampPower,screenPower) {
+    draw (matrix,sx,sy,time,night,editor,lampPower,screenPower,skyEvent) {
       if(editor){
         gl.activeTexture(gl.TEXTURE2)
         gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,editor)
         gl.activeTexture(gl.TEXTURE1)
       }
-      if(windowSky.paint(night))gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,windowSky.canvas)
+      if(windowSky.paint(night,skyEvent))gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,windowSky.canvas)
       gl.viewport(0,0,canvas.width,canvas.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT)
       gl.uniformMatrix3fv(uniforms.camera,false,matrix)
       gl.uniform2f(uniforms.scale,sx,sy);gl.uniform1f(uniforms.time,time);gl.uniform1f(uniforms.night,night)
@@ -177,9 +177,9 @@ function softwareRenderer (canvas, vertices, atlas) {
   const pixels=atlas.getContext('2d').getImageData(0,0,atlas.width,atlas.height).data
   const sky=createWindowSky()
   let editorPixels,skyPixels
-  return function draw(matrix,sx,sy,time,night,editor,lampPower,screenPower) {
+  return function draw(matrix,sx,sy,time,night,editor,lampPower,screenPower,skyEvent) {
     if(editor)editorPixels=editor.getContext('2d').getImageData(0,0,1024,440).data
-    if(sky.paint(night))skyPixels=sky.canvas.getContext('2d').getImageData(0,0,sky.canvas.width,sky.canvas.height).data
+    if(sky.paint(night,skyEvent))skyPixels=sky.canvas.getContext('2d').getImageData(0,0,sky.canvas.width,sky.canvas.height).data
     const w=canvas.width,h=canvas.height
     const image=ctx.createImageData(w,h), depth=new Float32Array(w*h).fill(-Infinity)
     function project(i) {
@@ -340,6 +340,7 @@ export default function Studio () {
   const ref=useRef(null), fallback=useRef(null), dialog=useRef(null)
   const steam=useRef(null)
   const mood=useRef(null)
+  const clockHands=useRef(null)
   const hitAreas=useRef({}), resetView=useRef(null)
   const activateObject=useRef(null)
   const [theme,setTheme]=useState(getStoredTheme)
@@ -374,6 +375,20 @@ export default function Studio () {
     const motion=window.matchMedia('(prefers-reduced-motion: reduce)')
     let view,audio,lampPower=1,screenPower=1
     const active=new Map(),drawers=new Map()
+    function updateClockHands(){
+      const node=clockHands.current
+      if(!node)return
+      const now=new Date()
+      const seconds=now.getSeconds()+now.getMilliseconds()/1000
+      const minutes=now.getMinutes()+seconds/60
+      const hours=(now.getHours()%12)+minutes/60
+      node.style.setProperty('--hour-angle',(hours*30)+'deg')
+      node.style.setProperty('--minute-angle',(minutes*6)+'deg')
+      node.style.setProperty('--second-angle',(seconds*6)+'deg')
+    }
+    updateClockHands()
+    const clockTimer=window.setInterval(updateClockHands,250)
+    let windowEventStart=-Infinity,windowEventTimer
     function activate(part){
       if(!part || part.kind==='project' || part.kind==='lamp')return
       if(part.kind==='chairBase')part=parts.find(p=>p.kind==='chair')
@@ -383,6 +398,11 @@ export default function Studio () {
         audio??=new Audio()
         if(audio.state==='suspended')audio.resume().catch(()=>{})
         playContact(audio,kind)
+      }
+      if(kind==='window'){
+        windowEventStart=performance.now()
+        clearTimeout(windowEventTimer)
+        windowEventTimer=setTimeout(refresh,3600)
       }
       if(kind==='contact'){dialog.current.showModal();return}
       if(kind==='lampSwitch'){
@@ -439,6 +459,12 @@ export default function Studio () {
           const headX=-.651-centre[0],headY=1.874-centre[1],headZ=.456-centre[2]
           mood.current.style.left=w/(2*ratio)+unit*(a*headX-b*headZ)+'px'
           mood.current.style.top=h/(2*ratio)-unit*(-b*d*headX+c*headY-a*d*headZ)-unit*.34+'px'
+          const [clockX,clockY,clockZ]=clockCenter.map((v,i)=>v-centre[i])
+          clockHands.current.style.left=w/(2*ratio)+unit*(a*clockX-b*clockZ)+'px'
+          clockHands.current.style.top=h/(2*ratio)-unit*(-b*d*clockX+c*clockY-a*d*clockZ)+'px'
+          clockHands.current.style.width=unit*.52+'px'
+          clockHands.current.style.height=unit*.52+'px'
+          clockHands.current.style.transform=`translate(-50%, -50%) matrix(${a}, ${b*d}, 0, ${c}, 0, 0)`
           for(const [key,obj] of interactiveFaces){
             const rake=obj.rake || 0
             const node=hitAreas.current[key]
@@ -484,7 +510,9 @@ export default function Studio () {
         }
         const time=motion.matches || !screenPower ? 0 : now/1000
         view={matrix,centre,unit:size/ratio,width:w/ratio,height:h/ratio,time:gpu?time:0}
-        render(matrix,2*size/w,2*size/h,time,night,changed?editor:null,lampPower,screenPower)
+        const elapsed=(now-windowEventStart)/3600
+        const skyEvent=elapsed>=0 && elapsed<1 ? (motion.matches ? .5 : elapsed) : -1
+        render(matrix,2*size/w,2*size/h,time,night,changed?editor:null,lampPower,screenPower,skyEvent)
         paintSteam(motion.matches?0:now/1000)
         lastDraw=now;dirty=false
       }
@@ -552,6 +580,8 @@ export default function Studio () {
       surface.removeEventListener('click',preventDragClick,true)
       canvas.removeEventListener('lostpointercapture',release);canvas.removeEventListener('keydown',key)
       motion.removeEventListener('change',refresh);document.removeEventListener('visibilitychange',refresh)
+      clearTimeout(windowEventTimer)
+      window.clearInterval(clockTimer)
     }
   },[])
   return <main className="studio-room" aria-label="liihuu 的三维工作室">
@@ -560,6 +590,12 @@ export default function Studio () {
     <canvas className="room-canvas" ref={ref} tabIndex="0" aria-label="程序员正在房间里敲代码。拖动或用方向键转动视角，Home 键复位。" />
     <canvas ref={steam} width="64" height="96" aria-hidden="true"
       style={{position:'absolute',pointerEvents:'none'}} />
+    <div ref={clockHands} className="clock-hands" aria-label="墙上时钟，显示当前时间">
+      <span className="clock-hands__hour" />
+      <span className="clock-hands__minute" />
+      <span className="clock-hands__second" />
+      <span className="clock-hands__pin" />
+    </div>
     <div ref={mood} className="mood-indicator mood-indicator--hidden" aria-label="人物状态正常" aria-live="polite" />
     {interactiveFaces.map(([key,obj])=>
       <button key={key} data-object-key={key} className={'object-hit'+(key==='monitorSwitch'?' monitor-switch-hit':'')} aria-label={obj.label} aria-pressed={key==='lampSwitch'||key==='monitorSwitch'?true:undefined} aria-haspopup={key==='contact'?'dialog':undefined}

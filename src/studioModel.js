@@ -10,6 +10,7 @@ const cross = (a,b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]
 const unit = v => v.map(n => n/(Math.hypot(...v)||1))
 const rgb = hex => [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)/255)
 
+export const clockCenter=[-.34,3.18,-2.17]
 export const drinkSurface=[1.78,1.554,-.91]
 
 export function studioModel (parts=[]) {
@@ -113,6 +114,17 @@ export function studioModel (parts=[]) {
   box(-2.88,1.01,-.08,.22,.06,2.76,edge)
   box(-2.82,1.09,-.08,.34,.11,2.86,wood)
 
+  part('clock')
+  const [clockX,clockY,clockZ]=clockCenter
+  oval(clockX,clockY,clockZ,.30,.30,.035,'#76533f')
+  oval(clockX,clockY,clockZ+.018,.258,.258,.024,'#ead9b7')
+  for(let i=0;i<12;i++){
+    const angle=i*TAU/12
+    const inner=.205, outer=.228
+    tube([clockX+inner*Math.sin(angle),clockY+inner*Math.cos(angle),clockZ+.048],
+      [clockX+outer*Math.sin(angle),clockY+outer*Math.cos(angle),clockZ+.048],.006,.006,'#756652')
+  }
+
   part('shelf')
   // Shelves, books and a trailing houseplant furnish the back wall.
   box(1.71,2.60,-1.99,1.95,.09,.45,wood)
@@ -193,12 +205,44 @@ export function studioModel (parts=[]) {
   shell(-.02,-.57,[[1.298,2.57,.83,.08],[1.306,2.56,.82,.08]],'#4d5e63')
   box(.12,1.14,-.98,4.65,.06,1.65,edge)
   for(const z of [-1.66,-.32]) box(-1.97,.58,z,.15,1.15,.15,charcoal)
-  box(1.82,.59,-.98,.85,1.14,1.34,'#ad9f8c')
+  for(const x of [1.415,2.225])box(x,.59,-.98,.04,1.14,1.34,'#ad9f8c')
+  box(1.82,.59,-1.63,.78,1.14,.04,'#816f5f')
+  box(1.82,.073,-.98,.81,.106,1.34,'#ad9f8c')
+  // Fixed dividers back the reveals between drawer fronts right up to their rear face.
+  for(let i=0;i<2;i++)box(1.82,.45+i*.34,-.98,.78,.046,1.34,'#816f5f')
   for(let i=0;i<3;i++){
     part('drawer')
     const trayY=.26+i*.34
-    box(1.82,trayY-.08,-.52,.72,.025,.45,'#987e64')
-    for(const side of [-1,1])box(1.82+side*.35,trayY,-.52,.023,.18,.45,'#93775d')
+    const floor=trayY-.025
+    box(1.82,floor-.015,-.82,.72,.03,1.04,'#987e64')
+    for(const side of [-1,1])box(1.82+side*.35,floor+.034,-.82,.023,.068,1.04,'#93775d')
+    box(1.82,floor+.034,-1.33,.68,.068,.02,'#93775d')
+    if(i===2){
+      // Clothbound notebook, page edges, elastic closure and a sharpened pencil.
+      box(1.68,floor+.04,-.89,.31,.08,.42,'#476e67')
+      box(1.686,floor+.04,-.886,.302,.054,.416,'#e4d8bd')
+      box(1.78,floor+.081,-.89,.024,.006,.42,'#283e3d')
+      tube([1.91,floor+.018,-.69],[1.99,floor+.018,-1.04],.018,.018,'#ce9745')
+      tube([1.99,floor+.018,-1.04],[2.0,floor+.018,-1.08],.018,.003,'#d5b48a')
+    }else if(i===1){
+      // Coiled charging cable with a plug and a separate USB stick.
+      const cablePoint=t=>[1.70+.132*Math.cos(t),floor+.015+.003*t, -.91+.116*Math.sin(t)]
+      for(let j=0;j<24;j++)tube(cablePoint(j*TAU/16),cablePoint((j+1)*TAU/16),.012,.012,'#e2ddce')
+      const end=cablePoint(1.5*TAU)
+      tube(end,[1.58,end[1],-.72],.012,.012,'#e2ddce')
+      box(1.58,end[1],-.70,.052,.033,.063,'#c4c7bd')
+      box(1.97,floor+.029,-.90,.099,.058,.20,'#ad6349')
+      box(1.97,floor+.029,-1.025,.077,.026,.05,'#b1b7b3')
+    }else{
+      // A small driver and three spare batteries with exposed positive terminals.
+      tube([1.58,floor+.04,-.71],[1.64,floor+.04,-.91],.04,.032,'#b96d42')
+      tube([1.64,floor+.04,-.91],[1.70,floor+.04,-1.11],.013,.01,'#b5bdba')
+      for(const x of [1.84,1.92,2.0]){
+        tube([x,floor+.032,-.78],[x,floor+.032,-.94],.032,.032,'#475b61')
+        tube([x,floor+.032,-.94],[x,floor+.032,-.985],.032,.032,'#c79862')
+        tube([x,floor+.032,-.985],[x,floor+.032,-.996],.016,.016,'#c6cbc3')
+      }
+    }
     box(1.82,.28+i*.34,-.285,.79,.31,.05,'#d9d1bf')
     box(1.82,.34+i*.34,-.25,.25,.035,.035,charcoal)
   }

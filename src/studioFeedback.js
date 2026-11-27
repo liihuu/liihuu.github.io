@@ -54,7 +54,7 @@ export function movePart(mesh,part,base,value){
       case 'lampSwitch': mesh[k+1]=y-.012*value;break
       case 'key': mesh[k+1]=y-.026*value;break
       case 'mouse': mesh[k+1]=y-.014*value*Math.max(0,Math.min(1,(-.46-z)/.16));break
-      case 'drawer': mesh[k+2]=z+.27*value;break
+      case 'drawer': mesh[k+2]=z+.91*value;break
       case 'book': mesh[k+2]=z+.09*value*Math.max(0,y-2.65)/.35;break
       case 'leaves': mesh[k]=x+.22*value*(z+1.98);mesh[k+2]=z-.09*value*(x-2.17);break
       case 'cup': mesh[k+1]=y+value;break

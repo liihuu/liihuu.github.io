@@ -242,7 +242,35 @@ export function createWindowSky () {
   const night=[[16,25,54],[52,70,116],[114,94,131]]
   const buildingsDay=[[173,195,203],[134,159,169],[97,130,140]]
   const buildingsNight=[[64,82,117],[42,62,88],[24,45,64]]
-  let previous=-1
+  const backdrop=document.createElement('canvas')
+  backdrop.width=canvas.width
+  backdrop.height=canvas.height
+  const cached=backdrop.getContext('2d')
+  let seed=4291
+  function random(){
+    seed=(Math.imul(seed,1664525)+1013904223)>>>0
+    return seed/4294967296
+  }
+  const skyline=buildingsDay.map((_,layer)=>{
+    const blocks=[]
+    for(let x=-35;x<940;){
+      const width=32+layer*19+random()*49
+      const top=345+layer*83+random()*82
+      const windows=[]
+      const step=10+layer*3
+      for(let y=top+12;y<640;y+=step+4){
+        for(let wx=x+6;wx<x+width-14;wx+=step) windows.push([wx,y,random()])
+      }
+      blocks.push({x,width,top,windows,roof:random()})
+      x+=width+2+random()*6
+    }
+    return blocks
+  })
+  const clouds=Array.from({length:48},(_,i)=>{
+    const [cx,cy]=[[152,119],[471,171],[823,95]][i%3]
+    return [cx+(random()-.5)*173,cy+(random()-.5)*19,22+random()*35,6+random()*11]
+  })
+  let previous=-1,previousTick=-1
 
   function disc(x,y,r,color) {
     g.fillStyle=color
@@ -250,9 +278,7 @@ export function createWindowSky () {
     g.arc(x,y,r,0,Math.PI*2)
     g.fill()
   }
-  function paint(phase) {
-    if(phase===previous)return false
-    previous=phase
+  function paintBackdrop(phase) {
     const setting=ease(0,.56,phase)
     const rising=ease(.46,1,phase)
     const sky=g.createLinearGradient(0,0,0,640)
@@ -276,28 +302,96 @@ export function createWindowSky () {
     halo.addColorStop(1,'rgba(255,196,119,0)')
     g.globalAlpha=1-ease(.37,.56,phase)
     disc(sunX,sunY,155,halo)
-    disc(sunX,sunY,56,blendColor([255,242,186],[255,174,106],setting))
+    disc(sunX,sunY,25,blendColor([255,242,186],[255,174,106],setting))
     const moonX=498+142*rising, moonY=487-341*rising-22*Math.sin(Math.PI*rising)
     g.globalAlpha=ease(.46,.74,phase)
-    disc(moonX,moonY,48,'#fff2ca')
-    for(const [x,y,r] of [[-13,-18,6],[13,12,8],[-18,14,4]])disc(moonX+x,moonY+y,r,'#e3d9b6')
-    g.globalAlpha=1-ease(.18,.71,phase)
-    g.fillStyle='#f4faf6dc'
-    for(const [x,y] of [[115,140],[420,84],[797,248]]){
-      g.beginPath();g.ellipse(x+20*phase,y,60,12,0,0,2*Math.PI)
-      g.ellipse(x-12+20*phase,y-7,25,15,0,0,2*Math.PI);g.fill()
+    disc(moonX,moonY,19,'#fff2ca')
+    for(const [x,y,r] of [[-13,-18,6],[13,12,8],[-18,14,4]])disc(moonX+x*.4,moonY+y*.4,r*.4,'#e3d9b6')
+    g.globalAlpha=.42-.25*phase
+    for(const [x,y,w,h] of clouds){
+      g.save()
+      g.translate(x,y)
+      g.scale(w,h)
+      const mist=g.createRadialGradient(0,0,0,0,0,1)
+      mist.addColorStop(0,blendColor([255,251,237],[112,131,160],phase))
+      mist.addColorStop(1,'rgba(220,225,230,0)')
+      disc(0,0,1,mist)
+      g.restore()
     }
     g.globalAlpha=1
-    for(let layer=0;layer<3;layer++){
-      const gap=50+22*layer
-      const facade=blendColor(buildingsDay[layer],buildingsNight[layer],ease(.16,.93,phase))
-      for(let i=0;i*gap-25<940;i++){
-        const y=365+layer*70+Math.sin(i*2.07+layer)*44+Math.cos(i*1.6)*32
-        g.fillStyle=facade;g.fillRect(i*gap-25,y,gap-3,640-y)
-        const lights=ease(.45+(i%4)*.06,.96,phase)
-        g.fillStyle=blendColor([196,214,211],i%3?[242,200,129]:[166,202,215],lights)
-        for(let row=0;row<5;row++)for(let col=0;col<3;col++)if((row+col+i)%3===0)g.fillRect(i*gap-15+col*15,y+17+row*24,7,10)
+    for(let ridge=0;ridge<2;ridge++){
+      g.fillStyle=blendColor(ridge?[161,180,183]:[186,201,204],ridge?[55,68,87]:[73,84,106],phase)
+      g.beginPath()
+      g.moveTo(0,640)
+      for(let x=0;x<=940;x+=4){
+        const t=x+ridge*89
+        g.lineTo(x,320+ridge*43+25*Math.sin(t/94)+12*Math.cos(t/48)+4*Math.sin(t/15))
       }
+      g.lineTo(940,640)
+      g.fill()
+    }
+    skyline.forEach((blocks,layer)=>{
+      const shade=ease(.16,.93,phase)
+      const face=blendColor(buildingsDay[layer],buildingsNight[layer],shade)
+      const bright=blendColor([181,198,202],[255,215,148],shade)
+      const warm=blendColor([181,198,202],[215,175,122],shade)
+      for(const {x,top,width,windows,roof} of blocks){
+        g.fillStyle=face
+        g.fillRect(x,top,width,640-top)
+        if(roof>.28)g.fillRect(x+width*.22,top-6-layer*2,width*.38,7+layer*2)
+        if(layer===2 && roof>.6){
+          g.fillRect(x+13,top-25,1.8,25)
+          g.fillRect(x+6,top-21,16,1.5)
+        }
+        g.fillStyle='rgba(24,39,55,.23)'
+        g.fillRect(x+width-10,top,10,640-top)
+        g.fillStyle='rgba(239,225,202,.28)'
+        g.fillRect(x-1,top,width+2,2)
+        for(const [wx,wy,occupancy] of windows){
+          g.fillStyle=occupancy>.72 ? (occupancy>.88?bright:warm)
+            : 'rgba(33,52,67,.35)'
+          g.fillRect(wx,wy,4+layer,6+layer)
+        }
+      }
+    })
+    cached.drawImage(canvas,0,0)
+  }
+  function paint(phase,progress=-1){
+    const tick=progress<0?-1:Math.floor(progress*72)
+    if(phase===previous && tick===previousTick)return false
+    if(phase!==previous)paintBackdrop(phase)
+    else g.drawImage(backdrop,0,0,940,640)
+    previous=phase
+    previousTick=tick
+    if(progress>=0){
+      g.save()
+      g.globalAlpha=Math.min(1,progress*12,(1-progress)*9)
+      if(phase<.5){
+        g.strokeStyle='#465762'
+        g.lineWidth=2.4
+        for(let i=0;i<5;i++){
+          const x=70+progress*775-i*22,y=206-48*progress+Math.abs(2-i)*9
+          const wing=5*Math.sin(progress*45+i)
+          g.beginPath()
+          g.moveTo(x-8,y-wing)
+          g.quadraticCurveTo(x-4,y-3,x,y+2)
+          g.quadraticCurveTo(x+4,y-3,x+8,y-wing)
+          g.stroke()
+        }
+      }else{
+        const x=750-480*progress,y=60+148*progress
+        const trail=g.createLinearGradient(x,y,x+86,y-27)
+        trail.addColorStop(0,'#fff2cb')
+        trail.addColorStop(1,'rgba(191,215,250,0)')
+        g.strokeStyle=trail
+        g.lineWidth=2.6
+        g.beginPath()
+        g.moveTo(x,y)
+        g.lineTo(x+86,y-27)
+        g.stroke()
+        disc(x,y,2.7,'#fff9df')
+      }
+      g.restore()
     }
     return true
   }
