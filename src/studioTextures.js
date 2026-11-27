@@ -69,28 +69,41 @@ function screenBrush(g){
 export function drawEditorCode(g,count){
   const {rect,label}=screenBrush(g)
   const lines=editorSource.slice(0,count).split('\n')
-  const active=lines.length-1
-  const firstVisible=Math.max(0,lines.length-15)
-  rect(128,85,337,329,'#1e1e1e')
-  rect(128,102+(active-firstVisible)*21-14,337,21,'#282828')
-  lines.slice(firstVisible).forEach((line,row)=>{
-    const i=firstVisible+row
-    const y=102+row*21
-    if(line.startsWith('  '))rect(158,y-13,1,21,'#404040')
-    label(String(i+1).padStart(2),132,y,11,i===active?'#eeeeee':'#858585',true)
-    let x=158
+  // Wrap at token boundaries so the larger type fits beside the live chart.
+  const rows=[]
+  g.font='17px Menlo, Consolas, monospace'
+  for(const [index,line] of lines.entries()){
+    let row={number:index+1,tokens:[],width:0}
+    rows.push(row)
     for(const token of line.match(/'[^']*'?|\w+|[^\w']/g)||[]){
-      const color=token.startsWith("'")?'#ce9178':/^(import|from|const|if|throw|true|false)$/.test(token)?'#c586c0':
-        /^(init|Error|setSymbol|setPeriod|setDataLoader|callback|createIndicator)$/.test(token)?'#dcdcaa':
-        /^\d+$/.test(token)?'#b5cea8':'#9cdcfe'
-      label(token,x,y,12.5,color,true)
-      x+=g.measureText(token).width
+      const width=g.measureText(token).width
+      if(row.width+width>296 && row.tokens.length){
+        row={number:null,tokens:[],width:0}
+        rows.push(row)
+      }
+      row.tokens.push({token,width})
+      row.width+=width
     }
-    if(i===active)rect(x+1,y-11,1,14,'#eeeeee')
+  }
+  const visible=rows.slice(-12)
+  rect(128,85,337,329,'#1e1e1e')
+  rect(128,85+(visible.length-1)*27,337,26,'#282828')
+  visible.forEach(({number,tokens},row)=>{
+    const y=105+row*27
+    if(number)label(String(number),131,y,13,'#a5abb0',true)
+    let x=160
+    for(const {token,width} of tokens){
+      const color=token.startsWith("'")?'#e0aa8e':/^(import|from|const|if|throw|true|false)$/.test(token)?'#dfaad9':
+        /^(init|Error|setSymbol|setPeriod|setDataLoader|callback|createIndicator)$/.test(token)?'#ece5ad':
+        /^\d+$/.test(token)?'#c8deb8':'#b2dfff'
+      label(token,x,y,17,color,true)
+      x+=width
+    }
+    if(row===visible.length-1)rect(x+1,y-14,2,18,'#eeeeee')
   })
 
   rect(190,418,275,22,'#007acc')
-  label('Ln '+lines.length+', Col '+(lines[active].length+1)+'    UTF-8    TypeScript',208,433,11,'#ffffff',true)
+  label('Ln '+lines.length+', Col '+(lines.at(-1).length+1)+'    UTF-8    TypeScript',208,433,11,'#ffffff',true)
 }
 
 export function drawScreen (g) {
@@ -153,7 +166,7 @@ export function drawChartPreview(g,stage,time=0){
   const up='#168476',down='#be5558',ink='#283742',muted='#596a77'
   rect(465,31,559,387,'#eef2f3')
   rect(465,31,559,31,'#dbe3e6')
-  label('图表预览',481,52,13,muted)
+  label('图表预览',481,53,16,ink)
   if(stage>=2)label('15 分钟 K 线',481,86,17,ink)
   if(stage<3){
     const angle=time*Math.PI*2/1000
@@ -192,16 +205,16 @@ export function drawChartPreview(g,stage,time=0){
   for(let i=0;i<=4;i++){
     const value=low+(high-low)*i/4
     rect(left,py(value),right-left,1,'#d3dbdf')
-    label(value.toFixed(2),967,py(value)+4,11,muted,true)
+    label(value.toFixed(2),964,py(value)+5,14,muted,true)
   }
   for(let i=0;i<bars.length;i+=12){
     rect(px(i),top,1,273,'#dae1e4')
-    label(String(8+i/4).padStart(2,'0')+':00',Math.max(left,px(i)-15),405,11,muted,true)
+    label(String(8+i/4).padStart(2,'0')+':00',Math.max(left,px(i)-15),405,14,muted,true)
   }
   const maxVolume=Math.max(...bars.map(b=>b.volume))
   bars.forEach((bar,i)=>{
     const color=bar.close>=bar.open?up:down
-    rect(px(i)-.7,py(bar.high),1.4,py(bar.low)-py(bar.high),color)
+    rect(px(i)-1,py(bar.high),2,py(bar.low)-py(bar.high),color)
     rect(px(i)-2.6,py(Math.max(bar.open,bar.close)),5.2,Math.max(1.5,Math.abs(py(bar.open)-py(bar.close))),color)
     const height=bar.volume/maxVolume*40
     if(stage===5)rect(px(i)-2.6,385-height,5.2,height,color)

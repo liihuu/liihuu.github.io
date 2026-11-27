@@ -1,6 +1,6 @@
 // All lamp dimensions and the light source are expressed in room coordinates.
 export const lampBase = [-1.99, 1.296, -.86]
-export const lampSwitch = { x: lampBase[0]+.075, y: lampBase[1]+.096, z: lampBase[2]+.103, width:.107, height:.055 }
+export const lampSwitch = { x: lampBase[0], y: lampBase[1]+.078, z: lampBase[2]+.137, width:.17, height:.14 }
 const crown = [-1.8172, 2.34841964, -.9548]
 const tiltFromVertical = 32 * Math.PI / 180
 const heading = Math.atan2(2,3)
@@ -59,17 +59,12 @@ export function buildTaskLamp({tri,tube,part}) {
     [.025,.169,brass],[.019,.162,'#ede1c4'],[0,diffuserRadius,'#e5d7b9'],
     [0,0,'#fff0c8']])
 
-  // The brass push button sits on the near shoulder of the enamel base.
+  // Align the bezel to the sloping enamel shoulder. Only the inner cap travels.
   const {x,y,z}=lampSwitch
-  tube([x,y-.037,z],[x,y-.013,z],.058,.053,metal)
+  const axis=[0,.993,.118]
+  turn([x,y,z],axis,[[-.011,.033],[-.005,.038,metal],[-.002,.036,'#33413b'],
+    [-.002,.030,metal],[-.006,.029,'#303c39']])
   part('lampSwitch')
-  tube([x,y-.013,z],[x,y+.005,z],.049,.047,brass)
-  tube([x,y+.005,z],[x,y+.009,z],.047,.044,'#dbc19b')
-  const mark=a=>[x+.016*Math.sin(a),y+.010,z-.016*Math.cos(a)]
-  for(let i=0;i<14;i++){
-    const arc=.68+i*(2*Math.PI-1.36)/14
-    tube(mark(arc),mark(arc+(2*Math.PI-1.36)/14),.0024,.0024,metal)
-  }
-  tube([x,y+.010,z-.022],[x,y+.010,z-.004],.0025,.0025,metal)
-
+  turn([x,y,z],axis,[[-.008,.028],[.0005,.028,brass],
+    [.002,.0265,'#ffe3a2'],[.003,.022,'#ffcc68'],[.003,0,'#ffcc68']])
 }

@@ -37,10 +37,11 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f1b45a; outline-offs
 .mood-indicator--hidden { display: none }
 .clock-hands { position: absolute; z-index: 1; pointer-events: none; transform: translate(-50%, -50%); }
 .clock-hands span { position: absolute; left: 50%; bottom: 50%; display: block; transform-origin: 50% 100%; border-radius: 999px; }
-.clock-hands__hour { width: 4%; height: 27%; background: #4b5149; transform: translateX(-50%) rotate(var(--hour-angle)); }
-.clock-hands__minute { width: 3%; height: 38%; background: #4b5149; transform: translateX(-50%) rotate(var(--minute-angle)); }
-.clock-hands__second { width: 1.5%; height: 42%; background: #ad7655; transform: translateX(-50%) rotate(var(--second-angle)); }
-.clock-hands__pin { left: 50%; bottom: 50%; width: 7%; height: 7%; border-radius: 50%; background: #4b5149; transform: translate(-50%, 50%); }
+.clock-hands__hour { width: 4%; height: 27%; background: #35453f; transform: translateX(-50%) rotate(var(--hour-angle)); }
+.clock-hands__minute { width: 3%; height: 38%; background: #35453f; transform: translateX(-50%) rotate(var(--minute-angle)); }
+.clock-hands__second { width: 1.5%; height: 42%; background: #ae634b; transform: translateX(-50%) rotate(var(--second-angle)); }
+[data-theme="dark"] .clock-hands__hour, [data-theme="dark"] .clock-hands__minute { background: #18262b }
+.clock-hands__pin { left: 50%; bottom: 50%; width: 7%; height: 7%; border-radius: 50%; background: #35453f; transform: translate(-50%, 50%); }
 .theme-toggle, .view-controls {
   position: absolute; color: #f8f0dd; background: #293b32df;
   border: 1px solid #e6d4af52; box-shadow: 0 3px 15px #283b321c;

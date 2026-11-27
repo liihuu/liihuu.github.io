@@ -88,14 +88,14 @@ export function studioModel (parts=[]) {
     }
   }
   const uv = (x,y,w,h) => [[x,y+h],[x+w,y+h],[x+w,y],[x,y]].map(p=>p.map(n=>n/2048))
-  const wood='#bb8157', edge='#98613f', baseboard='#b3a997', charcoal='#313d43', cream='#f0dbc1'
+  const wood='#bb8157', edge='#98613f', baseboard='#a4a79b', charcoal='#313d43', cream='#f0dbc1'
   // Continue the floor and walls past the camera so the viewport is inside the room.
   for (let ix=0; ix<4; ix++) for (let iz=0; iz<4; iz++) {
     const x=-3+6*ix, z=-2.25+4.5*iz
     quad([x,.03,z+4.5],[x+6,.03,z+4.5],[x+6,.03,z],[x,.03,z],'#ffffff',uv(0,700,1000,760))
   }
-  box(8.9,6,-2.28,24,12,.13,'#c9c5b9')
-  box(-3.04,6,9,.13,12,23,'#dfcaac')
+  box(8.9,6,-2.28,24,12,.13,'#bccac2')
+  box(-3.04,6,9,.13,12,23,'#e1d9ca')
   box(8.9,.15,-2.18,24,.22,.10,baseboard)
   box(-2.94,.15,9,.10,.22,23,baseboard)
 
@@ -137,13 +137,13 @@ export function studioModel (parts=[]) {
 
   part('clock')
   const [clockX,clockY,clockZ]=clockCenter
-  oval(clockX,clockY,clockZ,.30,.30,.035,'#76533f')
-  oval(clockX,clockY,clockZ+.018,.258,.258,.024,'#ead9b7')
+  oval(clockX,clockY,clockZ,.30,.30,.035,'#415751')
+  oval(clockX,clockY,clockZ+.018,.258,.258,.024,'#f1e9d8')
   for(let i=0;i<12;i++){
     const angle=i*TAU/12
     const inner=.205, outer=.228
     tube([clockX+inner*Math.sin(angle),clockY+inner*Math.cos(angle),clockZ+.048],
-      [clockX+outer*Math.sin(angle),clockY+outer*Math.cos(angle),clockZ+.048],.006,.006,'#756652')
+      [clockX+outer*Math.sin(angle),clockY+outer*Math.cos(angle),clockZ+.048],.006,.006,'#53635c')
   }
 
   part('shelf')

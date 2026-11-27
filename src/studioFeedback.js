@@ -51,7 +51,7 @@ export function movePart(mesh,part,base,value){
   for(let i=0;i<base.length;i+=12){
     const k=part.start+i,x=base[i],y=base[i+1],z=base[i+2]
     switch(part.kind){
-      case 'lampSwitch': mesh[k+1]=y-.012*value;break
+      case 'lampSwitch': mesh[k+1]=y-.004*value;break
       case 'key': mesh[k+1]=y-.026*value;break
       case 'mouse': mesh[k+1]=y-.014*value*Math.max(0,Math.min(1,(-.46-z)/.16));break
       case 'drawer': mesh[k+2]=z+.91*value;break

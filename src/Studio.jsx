@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { diffuserRadius, lampAxis, lampLight, lampSwitch } from './taskLamp'
 import { clockCenter, drinkSurface, studioModel } from './studioModel'
-import { createWindowSky, chartStage, drawChartPreview, drawEditorCode, makeAtlas, typedCharacters } from './studioTextures'
+import { createWindowSky, chartStage, drawChartPreview, drawEditorCode, drawScreen, makeAtlas, typedCharacters } from './studioTextures'
 
 import { pickPart, playContact, movePart } from './studioFeedback'
 import ThemeSwitcher from './ThemeSwitcher'
@@ -143,18 +143,23 @@ function gpuRenderer (canvas, vertices, atlas) {
   const editorTexture=gl.createTexture()
   gl.activeTexture(gl.TEXTURE2)
   gl.bindTexture(gl.TEXTURE_2D,editorTexture)
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1024,512,0,gl.RGBA,gl.UNSIGNED_BYTE,null)
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR)
+  const screenScale=canvas.clientWidth*devicePixelRatio>2300 && gl.getParameter(gl.MAX_TEXTURE_SIZE)>=2048 ? 2 : 1
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1024*screenScale,512*screenScale,0,gl.RGBA,gl.UNSIGNED_BYTE,null)
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR)
+  const anisotropy=gl.getExtension('EXT_texture_filter_anisotropic')
+  if(anisotropy)gl.texParameterf(gl.TEXTURE_2D,anisotropy.TEXTURE_MAX_ANISOTROPY_EXT,Math.min(4,gl.getParameter(anisotropy.MAX_TEXTURE_MAX_ANISOTROPY_EXT)))
   gl.uniform1i(gl.getUniformLocation(program,'editor'),2)
   gl.activeTexture(gl.TEXTURE1)
   gl.enable(gl.DEPTH_TEST)
   const uniforms=Object.fromEntries(['camera','scale','time','night','lampPower','screenPower'].map(k=>[k,gl.getUniformLocation(program,k)]))
   return {
+    screenScale,
     update(start,data){gl.bufferSubData(gl.ARRAY_BUFFER,start*4,data)},
     draw (matrix,sx,sy,time,night,editor,lampPower,screenPower,skyEvent) {
       if(editor){
         gl.activeTexture(gl.TEXTURE2)
         gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,editor)
+        gl.generateMipmap(gl.TEXTURE_2D)
         gl.activeTexture(gl.TEXTURE1)
       }
       if(windowSky.paint(night,skyEvent))gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,windowSky.canvas)
@@ -357,9 +362,11 @@ export default function Studio () {
     const render=gpu?gpu.draw:softwareRenderer(target,model,atlas)
 
     const editor=document.createElement('canvas')
-    editor.width=1024;editor.height=512
+    const screenScale=gpu?.screenScale ?? 1
+    editor.width=1024*screenScale;editor.height=512*screenScale
     const editorContext=editor.getContext('2d',{willReadFrequently:!gpu})
-    editorContext.drawImage(atlas,0,0,1024,440,0,0,1024,440)
+    editorContext.scale(screenScale,screenScale)
+    drawScreen(editorContext)
     const paintSteam=createSteamPainter(steam.current)
     const typingStart=performance.now()
     let typingPause=0,typingPausedAt=0
@@ -436,7 +443,7 @@ export default function Studio () {
       frame=0
       if(!visible || document.hidden)return
       if(dirty || now-lastDraw>=(gpu || active.size?40:220)){
-        const ratio=gpu?Math.min(devicePixelRatio,1.75):Math.min(1,1080/canvas.clientWidth)
+        const ratio=gpu?Math.min(devicePixelRatio,2.5):Math.min(1,1080/canvas.clientWidth)
         const w=Math.round(canvas.clientWidth*ratio),h=Math.round(canvas.clientHeight*ratio)
         if(!w||!h)return
         if(target.width!==w||target.height!==h){target.width=w;target.height=h}
@@ -540,9 +547,9 @@ export default function Studio () {
       if(dragged && e.detail){e.preventDefault();e.stopPropagation()}
       else if(e.detail && view && (e.target===canvas || e.target.closest('.object-hit'))){
         const hit=e.target.closest('.object-hit')
-        if(hit?.dataset.objectKey==='monitorSwitch'){
+        if(hit && ['monitorSwitch','lampSwitch'].includes(hit.dataset.objectKey)){
           e.stopPropagation()
-          activateObject.current?.('monitorSwitch')
+          activateObject.current?.(hit.dataset.objectKey)
           dragged=false
           return
         }
