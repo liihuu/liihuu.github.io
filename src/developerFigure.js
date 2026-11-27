@@ -177,6 +177,7 @@ export function buildDeveloper({tri,oval,tube,part=()=>{}}) {
   })
   line(band,.026,'#344342')
   for(const side of [-1,1]){
+    part('developerArms')
     const earpad=head([side*.245,.002,.028])
     oval(...earpad,.067,.113,.085,'#303e40')
     for(const [inner,outer,r1,r2,color] of [[.268,.293,.094,.095,'#71857c'],[.293,.308,.083,.078,'#48605c'],[.308,.312,.051,.049,'#617971']]){
@@ -184,6 +185,7 @@ export function buildDeveloper({tri,oval,tube,part=()=>{}}) {
     }
     line([[side*.278,.114,.030],[side*.293,.066,.096],[side*.293,.006,.105]],.013,'#a4a99b')
 
+    part('typingHand',{side})
     const wristX=px+.13+side*.26, wristZ=-.29+side*.025
     const shoulder=px+side*.284, elbow=px+side*.388
     limb([[shoulder-side*.052,1.457,.623,.063,.072],[shoulder,1.454,.596,.127,.144],[shoulder+side*.053,1.424,.533,.144,.145],
@@ -217,27 +219,29 @@ export function buildDeveloper({tri,oval,tube,part=()=>{}}) {
     const palmRows=palm.map(([z,w,h,y,shift])=>handRing(z,w,h,y,shift))
     palmRows[0]=cuff[cuff.length-1]
     skinSurface(palmRows,skin,j=>side*palm[j][5])
-    function digit(lateral,z,length,width,splay,weight){
-      const stations=[[0,.023,1.425,.67],[.18,.022,1.436,.73],[.38,.020,1.445,.80],
-        [.51,.018,1.443,.85],[.69,.017,1.432,.92],[.79,.016,1.426,.96],
-        [.91,.015,1.417,1],[.98,.011,1.414,1],[1,.002,1.415,1]]
+    function digit(lateral,z,length,width,splay,finger){
+      const stations=[[0,.023,1.425],[.18,.022,1.436],[.38,.020,1.445],
+        [.51,.018,1.443],[.69,.017,1.432],[.79,.016,1.426],
+        [.91,.015,1.417],[.98,.011,1.414],[1,.002,1.415]]
       const point=(t,y)=>handPoint(lateral+splay*t,y,z-length*t)
-      limb(stations.map(([t,r,y,influence])=>[...point(t,y),r*width,r*width*.85,
-        side*(.66+(weight-.66)*influence)]),skin)
+      part('typingFinger',{side,finger,tip:point(1,1.415)})
+      limb(stations.map(([t,r,y])=>[...point(t,y),r*width,r*width*.85,
+        t]),skin)
       // A low arched nail sits flush with the distal phalanx.
       const nail=point(.87,1.434)
-      oval(...nail,.0105*width,.0035,.014,'#dfac91',side*weight,-.54)
+      oval(...nail,.0105*width,.0035,.014,'#dfac91',.87,-.54)
     }
-    digit(-.060,-.099,.123,.98,-.010,.76)
-    digit(-.019,-.109,.134,1.02,-.003,.88)
-    digit(.024,-.105,.119,.95,.006,1)
-    digit(.063,-.088,.097,.80,.015,1.10)
+    digit(-.060,-.099,.123,.98,-.010,0)
+    digit(-.019,-.109,.134,1.02,-.003,1)
+    digit(.024,-.105,.119,.95,.006,2)
+    digit(.063,-.088,.097,.80,.015,3)
     const thumb=[[-.044,1.409,-.023,.035,.032,.55],[-.073,1.412,-.043,.035,.031,.57],
       [-.094,1.411,-.065,.030,.026,.60],[-.108,1.405,-.091,.024,.021,.63],
       [-.113,1.401,-.117,.021,.018,.64],[-.110,1.402,-.134,.014,.013,.65],
       [-.109,1.403,-.14,.004,.004,.65]]
-    limb(thumb.map(([x,y,z,w,h,m])=>[...handPoint(x,y,z),w,h,side*m]),skin)
-    oval(...handPoint(-.113,1.418,-.119),.012,.003,.014,'#dfac91',side*.65)
+    part('typingFinger',{side,finger:4,tip:handPoint(-.109,1.403,-.14)})
+    limb(thumb.map(([x,y,z,w,h],i)=>[...handPoint(x,y,z),w,h,i/(thumb.length-1)]),skin)
+    oval(...handPoint(-.113,1.418,-.119),.012,.003,.014,'#dfac91',.85)
 
   }
 }

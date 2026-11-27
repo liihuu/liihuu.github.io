@@ -14,9 +14,9 @@ export const clockCenter=[-.34,3.18,-2.17]
 
 export function studioModel (parts=[]) {
   const vertices = []
-  function part(kind){
+  function part(kind,details){
     if(parts.length)parts[parts.length-1].end=vertices.length
-    parts.push({kind,start:vertices.length,end:vertices.length})
+    parts.push({kind,start:vertices.length,end:vertices.length,...details})
   }
   const colors = new Map()
   function tri (points, color, normals, uvs, movement = [0,0,0]) {
@@ -296,10 +296,10 @@ export function studioModel (parts=[]) {
   part('keyboard')
   const pitch=.099,keyboardLeft=-1.23
   shell(keyboardLeft+9.2*pitch,-.542,[[1.306,1.88,.652,.026],[1.337,1.88,.652,.026]],charcoal)
-  for(const {row,column,width,color,atlasX,atlasY} of keyboardKeys){
-    part('key')
+  for(const {row,column,width,color,label,atlasX,atlasY} of keyboardKeys){
     const x=keyboardLeft+(column+width/2)*pitch
     const z=-.799+row*pitch+(row>0?.026:0)
+    part('key',{label,x,z})
     const base=width*pitch-.008,top=base-.012
     shell(x,z,[[1.337,base,.091,.008],[1.348,base,.091,.008],[1.38,top,.079,.007]],color)
     const half=top/2-.005

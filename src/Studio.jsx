@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { diffuserRadius, lampAxis, lampLight, lampSwitch } from './taskLamp'
 import { clockCenter, studioModel } from './studioModel'
-import { createWindowSky, chartStage, drawChartPreview, drawEditorCode, drawScreen, makeAtlas, typedCharacters } from './studioTextures'
+import { createWindowSky, chartStage, drawChartPreview, drawEditorCode, drawScreen, makeAtlas, typingFrame } from './studioTextures'
 
+import { createTypingMotion } from './typingMotion'
 import { pickPart, playContact, movePart } from './studioFeedback'
 import ThemeSwitcher from './ThemeSwitcher'
 import { applyTheme, getStoredTheme } from './themes'
@@ -16,17 +17,14 @@ const clamp = (v,min,max) => Math.min(max,Math.max(min,v))
 const vertexSource = `
   attribute vec3 position, normal, color;
   attribute vec2 uv;
-  attribute float motion;
   uniform mat3 camera;
   uniform vec2 scale;
-  uniform float time;
   varying vec3 world;
   varying vec3 tint;
   varying vec3 surfaceNormal;
   varying vec2 texcoord;
   void main() {
     vec3 p = position;
-    p.y += abs(motion)*.038*sin(time*8.+motion*1.85);
     world = p;
     vec3 v = camera * (p-vec3(${centre.join(',')}));
     gl_Position = vec4(v.xy*scale, -v.z/12., 1.);
@@ -127,7 +125,7 @@ function gpuRenderer (canvas, vertices, atlas) {
   const buffer=gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER,buffer)
   gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW)
-  for(const [name,size,offset] of [['position',3,0],['normal',3,3],['color',3,6],['uv',2,9],['motion',1,11]]) {
+  for(const [name,size,offset] of [['position',3,0],['normal',3,3],['color',3,6],['uv',2,9]]) {
     const i=gl.getAttribLocation(program,name)
     gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,size,gl.FLOAT,false,48,offset*4)
   }
@@ -156,11 +154,11 @@ function gpuRenderer (canvas, vertices, atlas) {
   gl.uniform1i(gl.getUniformLocation(program,'editor'),2)
   gl.activeTexture(gl.TEXTURE1)
   gl.enable(gl.DEPTH_TEST)
-  const uniforms=Object.fromEntries(['camera','scale','time','night','lampPower','screenPower'].map(k=>[k,gl.getUniformLocation(program,k)]))
+  const uniforms=Object.fromEntries(['camera','scale','night','lampPower','screenPower'].map(k=>[k,gl.getUniformLocation(program,k)]))
   return {
     screenScale,
     update(start,data){gl.bufferSubData(gl.ARRAY_BUFFER,start*4,data)},
-    draw (matrix,sx,sy,time,night,editor,lampPower,screenPower,skyEvent) {
+    draw (matrix,sx,sy,night,editor,lampPower,screenPower,skyEvent) {
       if(editor){
         gl.activeTexture(gl.TEXTURE2)
         gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,editor)
@@ -170,7 +168,7 @@ function gpuRenderer (canvas, vertices, atlas) {
       if(windowSky.paint(night,skyEvent))gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,windowSky.canvas)
       gl.viewport(0,0,canvas.width,canvas.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT)
       gl.uniformMatrix3fv(uniforms.camera,false,matrix)
-      gl.uniform2f(uniforms.scale,sx,sy);gl.uniform1f(uniforms.time,time);gl.uniform1f(uniforms.night,night)
+      gl.uniform2f(uniforms.scale,sx,sy);gl.uniform1f(uniforms.night,night)
       gl.uniform1f(uniforms.lampPower,lampPower)
       gl.uniform1f(uniforms.screenPower,screenPower)
       gl.drawArrays(gl.TRIANGLES,0,vertices.length/12)
@@ -186,7 +184,7 @@ function softwareRenderer (canvas, vertices, atlas) {
   const pixels=atlas.getContext('2d').getImageData(0,0,atlas.width,atlas.height).data
   const sky=createWindowSky()
   let editorPixels,skyPixels
-  return function draw(matrix,sx,sy,time,night,editor,lampPower,screenPower,skyEvent) {
+  return function draw(matrix,sx,sy,night,editor,lampPower,screenPower,skyEvent) {
     if(editor)editorPixels=editor.getContext('2d').getImageData(0,0,1024,440).data
     if(sky.paint(night,skyEvent))skyPixels=sky.canvas.getContext('2d').getImageData(0,0,sky.canvas.width,sky.canvas.height).data
     const w=canvas.width,h=canvas.height
@@ -369,6 +367,7 @@ export default function Studio () {
     const parts=[]
     const canvas=ref.current,model=studioModel(parts),atlas=makeAtlas()
     const gpu=gpuRenderer(canvas,model,atlas)
+    const animateTyping=createTypingMotion(model,parts,part=>gpu?.update(part.start,model.subarray(part.start,part.end)),movePart)
     const target=gpu?canvas:fallback.current
     const render=gpu?gpu.draw:softwareRenderer(target,model,atlas)
 
@@ -499,7 +498,8 @@ export default function Studio () {
         const t=duration && !motion.matches ? clamp((now-started)/duration,0,1) : 1
         night=t===1 ? targetNight : startNight+(targetNight-startNight)*t
         const pausedNow=typingPausedAt?now-typingPausedAt:0
-        const count=motion.matches?Infinity:typedCharacters(now-typingStart-typingPause-pausedNow)
+        const typing=typingFrame(now-typingStart-typingPause-pausedNow)
+        const count=motion.matches?Infinity:typing.count
         const stage=chartStage(count)
         const chartChanged=stage!==previousStage || stage<3
         const codeChanged=count!==previousCount
@@ -526,11 +526,11 @@ export default function Studio () {
           gpu?.update(part.start,model.subarray(part.start,part.end))
           if(progress===1)active.delete(part)
         }
-        const time=motion.matches || !screenPower ? 0 : now/1000
-        view={matrix,centre,unit:size/ratio,width:w/ratio,height:h/ratio,time:gpu?time:0}
+        animateTyping(screenPower && !motion.matches?typing:null,active)
+        view={matrix,centre,unit:size/ratio,width:w/ratio,height:h/ratio}
         const elapsed=(now-windowEventStart)/3600
         const skyEvent=elapsed>=0 && elapsed<1 ? (motion.matches ? .5 : elapsed) : -1
-        render(matrix,2*size/w,2*size/h,time,night,changed?editor:null,lampPower,screenPower,skyEvent)
+        render(matrix,2*size/w,2*size/h,night,changed?editor:null,lampPower,screenPower,skyEvent)
         paintSteam(motion.matches?0:now/1000)
         lastDraw=now;dirty=false
       }

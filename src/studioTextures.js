@@ -40,17 +40,32 @@ export function chartStage(count){
   return completedAt.filter(end=>count>=end).length
 }
 const firstTypedCharacter=editorSource.indexOf('chart.setSymbol')
-const keyTimes=[]
-let elapsed=0
+const strokes=[]
+let elapsed=200
+const shifted={'_':'-','(':'9',')':'0','{':'[','}':']',':':';','>':'.','?':'/','!':'1','"':"'",' ':'','\n':'Enter'}
 for(const character of editorSource.slice(firstTypedCharacter)){
-  elapsed+=character==='\n'?290:character===' '?55:75
-  keyTimes.push(elapsed)
+  const label=shifted[character]??character.toUpperCase()
+  const left='12345QWERTASDFGZXCVB'.includes(label) && label!==''
+  const side=left?-1:1
+  const columns=left?['45RTFGVB','3EDC','2WSX']:['67YUHJNM','8IK,','9OL.']
+  const column=columns.findIndex(group=>label.length===1 && group.includes(label))
+  const finger=character===' '?4:column<0?3:column
+  const previous=strokes.at(-1)
+  const variation=(strokes.length*73+character.charCodeAt(0)*11)%62
+  elapsed+=105+variation+(previous?.side===side?54:0)+(previous?.finger===finger?25:0)
+  if(previous?.label==='Enter')elapsed+=210
+  if(character==='\n' && previous?.label==='Enter')elapsed+=370
+  strokes.push({time:elapsed,label,side,finger})
 }
 
-export function typedCharacters(time){
+export function typingFrame(time){
   const phase=time%(elapsed+2300)
-  const next=keyTimes.findIndex(end=>phase<end)
-  return next<0?editorSource.length:firstTypedCharacter+next
+  let next=strokes.findIndex(stroke=>stroke.time>phase)
+  if(next===-1)next=strokes.length
+  const nearby=[]
+  for(let i=next-1;i>=0 && phase-strokes[i].time<320;i--)nearby.unshift(strokes[i])
+  for(let i=next;i<strokes.length && strokes[i].time-phase<320;i++)nearby.push(strokes[i])
+  return {count:firstTypedCharacter+next,phase,nearby}
 }
 
 function screenBrush(g){

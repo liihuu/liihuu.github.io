@@ -1,15 +1,15 @@
 // Pick the foremost triangle under the pointer, including geometry that can
 // hide an interactive part. The orthographic test uses the renderer's basis.
 export function pickPart(vertices,parts,view,x,y){
-  const {matrix:m,centre,unit,width,height,time}=view
+  const {matrix:m,centre,unit,width,height}=view
   const px=(x-width/2)/unit,py=(height/2-y)/unit
   let nearest=-Infinity,hit=-1
   const u=[],v=[],depth=[]
   for(let i=0;i<vertices.length;i+=36){
     for(let j=0;j<3;j++){
-      const k=i+j*12,weight=vertices[k+11]
+      const k=i+j*12
       const dx=vertices[k]-centre[0],dz=vertices[k+2]-centre[2]
-      const dy=vertices[k+1]-centre[1]+Math.abs(weight)*.038*Math.sin(time*8+weight*1.85)
+      const dy=vertices[k+1]-centre[1]
       u[j]=m[0]*dx+m[6]*dz-px
       v[j]=m[1]*dx+m[4]*dy+m[7]*dz-py
       depth[j]=m[2]*dx+m[5]*dy+m[8]*dz
