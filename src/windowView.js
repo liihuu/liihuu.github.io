@@ -157,13 +157,28 @@ export function createWindowSky(){
     // Keep the sun and moon moving along the existing day/night transition.
     const night=phase>.52
     const travel=night?(phase-.52)/.48:phase/.52
-    const cx=night?565+100*travel:597+115*travel,cy=night?314-197*travel:143+171*travel
+    const skyX=597,skyY=143
+    const cx=night?skyX-32*(1-travel):skyX+115*travel
+    const cy=skyY+171*(night?1-travel:travel)
     const alpha=night?travel:1-travel
     g.globalAlpha=alpha
-    const glow=g.createRadialGradient(cx,cy,9,cx,cy,76)
-    glow.addColorStop(0,'rgba(255,230,177,.32)');glow.addColorStop(1,'rgba(255,230,177,0)')
-    g.fillStyle=glow;g.fillRect(cx-76,cy-76,152,152)
-    g.beginPath();g.arc(cx,cy,night?13:19,0,2*Math.PI);g.fillStyle=night?'#fff2d4':'#fff0bd';g.fill()
+    g.save()
+    g.translate(cx,cy)
+    const discRadius=night?13:43
+    if(!night){
+      // Compensate for the angled window so the sun reads as a disc in the home view.
+      g.transform(1,.25,0,.47,0,0)
+      const radius=84
+      const glow=g.createRadialGradient(0,0,discRadius,0,0,radius)
+      glow.addColorStop(0,'rgba(255,244,201,.34)')
+      glow.addColorStop(1,'rgba(255,244,201,0)')
+      g.fillStyle=glow;g.fillRect(-radius,-radius,2*radius,2*radius)
+      g.fillStyle='#fff6d3'
+    }else{
+      g.fillStyle='#a5b1c2'
+    }
+    g.beginPath();g.arc(0,0,discRadius,0,2*Math.PI);g.fill()
+    g.restore()
     g.globalAlpha=1
     if(progress>=0){
       g.globalAlpha=Math.min(1,progress*12,(1-progress)*9)
