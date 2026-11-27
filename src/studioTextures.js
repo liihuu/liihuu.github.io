@@ -1,6 +1,6 @@
 import { keyboardKeys } from './keyboardLayout'
 import { lampBase } from './taskLamp'
-import { profile } from './studioObjects'
+import { drinkSurface, profile } from './studioObjects'
 
 const setup=`import { init } from 'klinecharts'
 import candles from './candles.json'
@@ -282,7 +282,7 @@ export function makeAtlas () {
       g.bezierCurveTo(x+115,y-9*Math.sin(i*.11),x+209,y+12*Math.cos(i*.12),x+325+i%190,y+2)
       g.stroke()
     }
-    for(const [x,y,rx,ry] of [[485,130,150,67],[(lampBase[0]+2.20)/4.64*1000,(lampBase[2]+1.80)/1.64*480,55,58],[854,261,47,42],[925,90,68,30],[492,360,307,87]]){
+    for(const [x,y,rx,ry] of [[485,130,150,67],[(lampBase[0]+2.20)/4.64*1000,(lampBase[2]+1.80)/1.64*480,55,58],[(drinkSurface[0]+2.20)/4.64*1000,(drinkSurface[2]+1.80)/1.64*480,47,42],[903,90,80,30],[492,360,307,87]]){
       g.save();g.translate(x,y);g.scale(rx,ry)
       const shadow=g.createRadialGradient(0,0,.06,0,0,1)
       shadow.addColorStop(0,'#46342577');shadow.addColorStop(1,'#46342500')
@@ -297,16 +297,22 @@ export function makeAtlas () {
     g.font=(label.length>2?'bold 14px':'bold 20px')+' monospace'
     g.fillText(label,atlasX+5,atlasY+23,w-10)
   }
-  region(1060,1490,900,395,()=>{
-    const finish=g.createLinearGradient(0,0,0,395)
-    finish.addColorStop(0,'#53515b');finish.addColorStop(1,'#3e3b44')
-    g.fillStyle=finish;g.fillRect(0,0,900,395)
-    g.fillStyle='#f3ecdc'
-    g.font='132px sans-serif';g.fillText(profile.name,46,132)
-    g.font='50px sans-serif';g.fillText(profile.role,50,210)
-    g.font='46px sans-serif';g.fillText('KLineChart 作者',50,269)
-    g.fillStyle='#dedaca'
-    g.font='36px monospace';g.fillText(profile.email,50,349)
+  region(1060,1490,900,240,()=>{
+    const maple=g.createLinearGradient(0,0,0,240)
+    maple.addColorStop(0,'#e2bd91');maple.addColorStop(1,'#cfa478')
+    g.fillStyle=maple;g.fillRect(0,0,900,240)
+    for(let i=0;i<50;i++){
+      const y=i*5,x=(i*137)%1040-180
+      g.strokeStyle=i%3?'#986a451c':'#fff3d42b'
+      g.beginPath();g.moveTo(x,y)
+      g.bezierCurveTo(x+110,y-6,x+245,y+7*Math.sin(i),x+410,y+2)
+      g.stroke()
+    }
+    g.textAlign='center';g.font='600 118px "Helvetica Neue", sans-serif'
+    g.fillStyle='#edcb9e';g.fillText(profile.name,450,115)
+    g.fillStyle='#493423';g.fillText(profile.name,450,113)
+    g.font='500 80px "Helvetica Neue", sans-serif'
+    g.fillText(profile.email,450,205,844)
   })
   return atlas
 }

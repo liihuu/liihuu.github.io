@@ -1,7 +1,7 @@
 import { keyboardKeys } from './keyboardLayout'
 import { buildDeveloper } from './developerFigure'
 import { buildTaskLamp } from './taskLamp'
-import { objects } from './studioObjects'
+import { drinkSurface, objects } from './studioObjects'
 
 // Coordinates are in room units. Y is up and the two open walls face +X and +Z.
 const TAU = 2 * Math.PI
@@ -11,7 +11,6 @@ const unit = v => v.map(n => n/(Math.hypot(...v)||1))
 const rgb = hex => [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)/255)
 
 export const clockCenter=[-.34,3.18,-2.17]
-export const drinkSurface=[1.78,1.554,-.91]
 
 export function studioModel (parts=[]) {
   const vertices = []
@@ -365,27 +364,32 @@ export function studioModel (parts=[]) {
     tri([[cupX,liquidY,cupZ],ringPoint(.122,liquidY,i+1),ringPoint(.122,liquidY,i)],'#734631')
   }
   oval(cupX-.045,liquidY+.001,cupZ-.032,.035,.0008,.007,'#be8962')
+  const handleAngle=Math.PI/6
+  function handlePoint(t){
+    const radius=.13+.12*Math.sin(t)
+    return [cupX+radius*Math.cos(handleAngle),1.44+.09*Math.cos(t),cupZ+radius*Math.sin(handleAngle)]
+  }
   for(let i=0;i<12;i++){
-    const pos=t=>[1.91+.12*Math.sin(t),1.44+.09*Math.cos(t),-.91]
-    tube(pos(i*Math.PI/12),pos((i+1)*Math.PI/12),.027,.027,'#e0ba83')
+    tube(handlePoint(i*Math.PI/12),handlePoint((i+1)*Math.PI/12),.027,.027,'#e0ba83')
   }
   part('contact')
   const card=objects.contact
-  // A single folded sheet rests on two edges. The open ends reveal its thickness.
-  const foot=card.y-card.height/2,front=card.z+card.height*card.rake/2
-  const crest=front-card.height*card.rake
-  const fold=[[foot,front],[foot+card.height,crest],[foot+card.height+.006,crest-.006],
-    [foot+card.height+.006,crest-.013],[foot,crest-.106],[foot,crest-.096],
-    [foot+card.height-.005,crest-.010],[foot,front-.009]]
+  // A single maple wedge, with a sloping face and a narrow planed top.
+  const low=card.y-card.height/2,high=card.y+card.height/2
+  const toe=card.z+card.height*card.rake/2,heel=toe-.205
+  const crest=card.z-card.height*card.rake/2
+  const section=[[low,toe],[high,crest],[high+.005,crest-.008],
+    [high+.005,heel+.012],[high-.006,heel],[low,heel],[low-.006,heel+.007],[low-.006,toe-.008]]
   const left=card.x-card.width/2,right=card.x+card.width/2
-  for(let i=0;i<fold.length;i++){
-    const a=fold[i],b=fold[(i+1)%fold.length]
-    quad([left,...a],[right,...a],[right,...b],[left,...b],
-      i===0?'#e7dcc9':i===3?'#625e59':'#a39889',i===0?uv(1060,1490,900,395):null)
+  for(let i=0;i<section.length;i++){
+    const [y,z]=section[i],[nextY,nextZ]=section[(i+1)%section.length]
+    quad([left,y,z],[right,y,z],[right,nextY,nextZ],[left,nextY,nextZ],
+      '#c89c70',i===0?uv(1060,1490,900,240):null)
   }
   for(const x of [left,right]){
-    for(const corners of [[0,1,6,7],[1,2,3,6],[3,4,5,6]]){
-      quad(...corners.map(i=>[x,...fold[i]]),'#b1a28d')
+    for(let i=1;i<section.length-1;i++){
+      const face=[section[0],section[i],section[i+1]].map(([y,z])=>[x,y,z])
+      tri(x===left?face:face.reverse(),'#b18a63')
     }
   }
   part('lamp')

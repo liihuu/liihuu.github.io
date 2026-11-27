@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { diffuserRadius, lampAxis, lampLight, lampSwitch } from './taskLamp'
-import { clockCenter, drinkSurface, studioModel } from './studioModel'
+import { clockCenter, studioModel } from './studioModel'
 import { createWindowSky, chartStage, drawChartPreview, drawEditorCode, drawScreen, makeAtlas, typedCharacters } from './studioTextures'
 
 import { pickPart, playContact, movePart } from './studioFeedback'
 import ThemeSwitcher from './ThemeSwitcher'
 import { applyTheme, getStoredTheme } from './themes'
-import { objects, profile } from './studioObjects'
+import { drinkSurface, objects, profile } from './studioObjects'
 import qrcode from './assets/qrcode.png'
 
 const interactiveFaces=[['contact',objects.contact],['lampSwitch',{...lampSwitch,label:'台灯电源开关'}],['monitorSwitch',objects.monitorSwitch]]
