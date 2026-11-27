@@ -105,14 +105,35 @@ export function studioModel (parts=[]) {
     quad([l,bottom,z],[r,bottom,z],[r,top,z],[l,top,z],'#ffffff',uv(...texture))
   }
   part('window')
-  // A timber sash window looks out over the roofs at dusk.
-  box(-2.94,2.05,-.08,.12,1.91,2.69,edge)
-  quad([-2.865,1.18,1.18],[-2.865,1.18,-1.34],[-2.865,2.92,-1.34],[-2.865,2.92,1.18],'#ffffff',uv(1080,0,940,640))
-  for(const z of [-1.35,-.08,1.19]) box(-2.84,2.05,z,.07,1.82,.055,cream)
-  for(const y of [1.16,2.24,2.94]) box(-2.84,y,-.08,.07,.055,2.58,cream)
-  for(const z of [-1.39,1.23])box(-2.89,2.05,z,.14,1.96,.085,wood)
-  box(-2.88,1.01,-.08,.22,.06,2.76,edge)
-  box(-2.82,1.09,-.08,.34,.11,2.86,wood)
+  // A recessed pair of timber casements. The outer lining, sash, putty bead
+  // and glass occupy different planes, so the reveals stay visible on orbit.
+  box(-2.955,2.05,-.08,.105,1.99,2.76,'#685044')
+  quad([-2.895,1.15,1.22],[-2.895,1.15,-1.38],[-2.895,2.95,-1.38],[-2.895,2.95,1.22],'#ffffff',uv(1080,0,940,640))
+  function frame(x,depth,bottom,top,left,right,width,color){
+    for(const z of [left+width/2,right-width/2])box(x,(bottom+top)/2,z,depth,top-bottom,width,color)
+    for(const y of [bottom+width/2,top-width/2])box(x,y,(left+right)/2,depth,width,right-left-2*width,color)
+  }
+  frame(-2.91,.13,1.09,3.01,-1.44,1.28,.065,'#9b7253')
+  frame(-2.865,.112,1.13,2.972,-1.397,1.237,.034,'#dab58b')
+  for(const [left,right] of [[-1.367,-.082],[-.078,1.207]]){
+    frame(-2.856,.078,1.158,2.945,left,right,.047,'#dfc39e')
+    frame(-2.863,.045,1.205,2.898,left+.047,right-.047,.016,'#947a60')
+    frame(-2.843,.028,1.216,2.887,left+.058,right-.058,.010,'#edddc1')
+    box(-2.859,2.24,(left+right)/2,.057,.036,right-left-.092,'#d7b996')
+    box(-2.829,2.25,(left+right)/2,.010,.011,right-left-.09,'#f0dbb9')
+  }
+  // The latch has a backplate, spindle and a lever that clears the meeting rail.
+  box(-2.803,1.98,-.106,.027,.126,.046,'#937859')
+  for(const y of [1.93,2.029])tube([-2.79,y,-.106],[-2.784,y,-.106],.007,.007,'#c9ad82')
+  tube([-2.80,1.993,-.106],[-2.737,1.993,-.106],.018,.015,'#b59263')
+  tube([-2.737,1.993,-.106],[-2.725,1.917,-.112],.015,.012,'#c6a775')
+  for(const z of [-1.348,1.189])for(const y of [1.51,2.59]){
+    tube([-2.817,y,z],[-2.817,y+.096,z],.012,.012,'#a38968')
+    tube([-2.817,y+.043,z],[-2.817,y+.052,z],.013,.013,'#705e4d')
+  }
+  box(-2.89,1.064,-.08,.23,.09,2.76,'#a77e5a')
+  shell(-2.83,-.08,[[1.08,.29,2.82,.024],[1.095,.35,2.88,.035],
+    [1.131,.35,2.88,.035],[1.146,.329,2.864,.031]],'#c8986e')
 
   part('clock')
   const [clockX,clockY,clockZ]=clockCenter
